@@ -19,8 +19,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Georgia', 'PingFang SC', serif; height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding-top: 4vh;
-            background: #e6f2ff; /* 默认底色 */
-            background-size: cover; background-position: center; background-repeat: no-repeat;
+            background: #e6f2ff; background-size: cover; background-position: center; background-repeat: no-repeat;
             transition: background 0.5s ease; margin: 0; position: relative; overflow: hidden;
         }
 
@@ -52,7 +51,7 @@
         .nav-info { flex: 1; }
         .nav-name { font-size: 18px; font-weight: 600; color: var(--text-main); letter-spacing: 0.5px; }
         .nav-status { font-size: 13px; color: var(--text-main); opacity: 0.8; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-        .nav-status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #43a047; flex-shrink: 0; transition: background 0.4s; }
+        .nav-status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; transition: background 0.4s; }
         .nav-menu { background: rgba(255,255,255,0.5); border: none; color: var(--text-main); font-size: 18px; cursor: pointer; padding: 8px 12px; border-radius: 12px; transition: 0.2s; }
         .nav-menu:hover { background: #fff; }
 
@@ -61,19 +60,29 @@
         .chat-messages::-webkit-scrollbar { width: 4px; }
         .chat-messages::-webkit-scrollbar-thumb { background: rgba(74,144,226,0.2); border-radius: 10px; }
         
-        .date-divider { text-align: center; font-size: 12px; color: rgba(26, 42, 58, 0.5); padding: 10px 0; }
-        .message-wrapper { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 6px; animation: messageSlideIn 0.35s ease-out; }
+        /* 日期分隔线 */
+        .date-divider { text-align: center; font-size: 12px; color: rgba(26, 42, 58, 0.4); padding: 10px 0; font-weight: 500; }
+        
+        .message-wrapper { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 6px; animation: messageSlideIn 0.35s ease-out; position: relative; }
         @keyframes messageSlideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .message-wrapper.user { justify-content: flex-end; }
         .message-wrapper.user .avatar { order: 1; }
         .avatar { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-main); border: 2px solid #fff; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         
-        .message { padding: 14px 20px; border-radius: 22px; max-width: 76%; word-wrap: break-word; line-height: 1.6; font-size: 15px; position: relative; color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .message { padding: 14px 20px; border-radius: 22px; max-width: 76%; word-wrap: break-word; line-height: 1.6; font-size: 15px; position: relative; color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; }
         .message.user { background: linear-gradient(135deg, #c2e0ff 0%, #a4c9f0 100%); border-bottom-right-radius: 6px; border: 1px solid #fff; }
         .message.bot { background: rgba(255, 255, 255, 0.9); border-bottom-left-radius: 6px; border: 1px solid #fff; }
         .message .time { font-size: 10px; opacity: 0.4; margin-left: 8px; display: inline-block; }
         
+        /* 单条删除按钮 */
+        .delete-btn { position: absolute; top: -8px; width: 22px; height: 22px; background: #ff6b6b; color: #fff; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(255,107,107,0.4); z-index: 10; transition: 0.2s; }
+        .message-wrapper.user .delete-btn { left: -8px; }
+        .message-wrapper.bot .delete-btn { right: -8px; }
+        .message:hover .delete-btn { display: flex; }
+        /* 手机端点击气泡显示删除 */
+        .message.active .delete-btn { display: flex; }
+
         .typing-indicator { align-self: flex-start; display: flex; align-items: center; gap: 4px; padding: 14px 20px; border-radius: 22px; border-bottom-left-radius: 6px; background: rgba(255, 255, 255, 0.9); margin-bottom: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         .typing-indicator span { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; animation: typingBounce 1.2s ease-in-out infinite; }
         .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
@@ -88,41 +97,41 @@
         .chat-input-area button:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
         /* ===== 音乐播放器 (桌面端) ===== */
-        .music-player { position: fixed; top: 30px; right: 30px; z-index: 999; width: 320px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(24px); border-radius: 24px; padding: 20px; border: 1px solid var(--glass-border); box-shadow: 0 15px 35px rgba(74,144,226,0.1); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); user-select: none; cursor: grab; }
+        .music-player { position: fixed; top: 30px; right: 30px; z-index: 999; width: 300px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(24px); border-radius: 24px; padding: 16px; border: 1px solid var(--glass-border); box-shadow: 0 15px 35px rgba(74,144,226,0.1); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); user-select: none; cursor: grab; }
         .music-player:active { cursor: grabbing; }
-        .music-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .track-name { color: var(--text-main); font-size: 15px; font-weight: 600; }
-        .minimize-btn { background: rgba(0,0,0,0.05); border: none; color: var(--text-main); cursor: pointer; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .music-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .track-name { color: var(--text-main); font-size: 14px; font-weight: 600; }
+        .minimize-btn { background: rgba(0,0,0,0.05); border: none; color: var(--text-main); cursor: pointer; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 12px; }
         .minimize-btn:hover { background: rgba(0,0,0,0.1); }
-        .music-body { display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        .record-disc { width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #4a5a6a, #1a2a3a); position: relative; animation: spin 10s linear infinite; animation-play-state: paused; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .music-body { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        .record-disc { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #4a5a6a, #1a2a3a); position: relative; animation: spin 10s linear infinite; animation-play-state: paused; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .record-disc.playing { animation-play-state: running; }
-        .record-disc .center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 28px; height: 28px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff; }
-        .music-controls { display: flex; align-items: center; gap: 12px; width: 100%; }
-        .music-controls button { background: var(--primary); border: none; border-radius: 50%; width: 36px; height: 36px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
+        .record-disc .center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+        .music-controls { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .music-controls button { background: var(--primary); border: none; border-radius: 50%; width: 32px; height: 32px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
         .music-controls button:hover { transform: scale(1.05); }
         .progress-slider { flex: 1; height: 4px; -webkit-appearance: none; background: rgba(74,144,226,0.15); border-radius: 4px; outline: none; }
-        .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; box-shadow: 0 2px 6px rgba(74,144,226,0.4); }
-        .time-display { font-size: 12px; color: var(--text-main); opacity: 0.7; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); cursor: pointer; box-shadow: 0 2px 6px rgba(74,144,226,0.4); }
+        .time-display { font-size: 11px; color: var(--text-main); opacity: 0.7; font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 4px; }
 
         /* ===== 自定义弹窗 (Modal) ===== */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .modal-overlay.show { display: flex; }
-        .modal-box { background: #fff; border-radius: 24px; padding: 30px; width: 320px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .modal-box { background: #fff; border-radius: 20px; padding: 24px; width: 300px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        .modal-title { font-size: 18px; font-weight: 600; color: var(--text-main); margin-bottom: 12px; }
-        .modal-desc { font-size: 14px; color: #666; margin-bottom: 24px; line-height: 1.5; }
-        .modal-btns { display: flex; gap: 12px; }
-        .modal-btn { flex: 1; padding: 12px 0; border: none; border-radius: 12px; font-size: 15px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .modal-title { font-size: 17px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; }
+        .modal-desc { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+        .modal-btns { display: flex; gap: 10px; }
+        .modal-btn { flex: 1; padding: 10px 0; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: 500; transition: 0.2s; }
         .modal-btn.cancel { background: #f0f0f0; color: #666; }
         .modal-btn.confirm { background: var(--primary); color: #fff; }
         .modal-btn:hover { opacity: 0.8; }
 
-        /* ===== 下拉菜单 ===== */
-        .dropdown-menu { position: fixed; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 16px; padding: 8px 0; min-width: 160px; z-index: 9999; display: none; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        /* ===== 下拉菜单 (精致版) ===== */
+        .dropdown-menu { position: fixed; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 12px; padding: 6px; min-width: 130px; z-index: 9999; display: none; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
         .dropdown-menu.show { display: block; }
-        .dropdown-menu .menu-item { padding: 12px 20px; font-size: 14px; color: var(--text-main); border: none; background: none; width: 100%; text-align: left; cursor: pointer; transition: 0.2s; }
+        .dropdown-menu .menu-item { padding: 9px 14px; font-size: 13px; color: var(--text-main); border: none; background: none; width: 100%; text-align: left; cursor: pointer; transition: 0.2s; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
         .dropdown-menu .menu-item:hover { background: rgba(74,144,226,0.1); color: var(--primary); }
 
         /* ===== 桌面宠物 ===== */
@@ -130,7 +139,7 @@
         .desktop-pet:active { cursor: grabbing; }
         .desktop-pet img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; pointer-events: none; }
         .desktop-pet .pet-placeholder { font-size: 100px; color: var(--text-main); opacity: 0.2; font-weight: 300; display: none; }
-        .pet-bubble { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-radius: 16px; padding: 10px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); font-size: 15px; color: var(--text-main); max-width: 200px; border: 1px solid #fff; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap; text-align: center; }
+        .pet-bubble { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-radius: 16px; padding: 10px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); font-size: 14px; color: var(--text-main); max-width: 200px; border: 1px solid #fff; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap; text-align: center; }
         .pet-bubble.show { opacity: 1; }
         .pet-bubble::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid rgba(255,255,255,0.95); }
 
@@ -208,11 +217,12 @@
 
     <!-- 下拉菜单 -->
     <div class="dropdown-menu" id="dropdownMenu">
+        <button class="menu-item" onclick="toggleMusicPlayer()"><i class="fas fa-music"></i> 显示音乐</button>
         <button class="menu-item" onclick="exportChat()"><i class="fas fa-download"></i> 导出对话</button>
-        <button class="menu-item" onclick="askSearch()"><i class="fas fa-search"></i> 搜索对话</button>
+        <button class="menu-item" onclick="askSearch()"><i class="fas fa-search"></i> 搜索</button>
         <button class="menu-item" onclick="triggerBgUpload()"><i class="fas fa-image"></i> 更换背景</button>
-        <button class="menu-item" onclick="toggleTheme()"><i class="fas fa-moon"></i> 切换夜间模式</button>
-        <button class="menu-item" onclick="promptClear()" style="color: #e74c3c;"><i class="fas fa-trash-alt"></i> 清空对话</button>
+        <button class="menu-item" onclick="toggleTheme()"><i class="fas fa-moon"></i> 夜间模式</button>
+        <button class="menu-item" onclick="promptClear()" style="color: #e74c3c;"><i class="fas fa-trash-alt"></i> 清空全部</button>
     </div>
 
     <!-- 自定义弹窗 -->
@@ -231,7 +241,7 @@
     <div class="music-player" id="musicPlayer">
         <span class="mobile-music-icon" id="mobileMusicIcon"><i class="fas fa-music"></i></span>
         <div class="music-header">
-            <span class="track-name" id="trackName">🎵 遇见你</span>
+            <span class="track-name" id="trackName">🎵 正在播放</span>
             <button class="minimize-btn" id="musicMinimize"><i class="fas fa-times"></i></button>
         </div>
         <div class="music-body">
@@ -265,14 +275,53 @@
         var messageIdCounter = 0;
         var lastDate = '';
 
+        // 情绪颜色：全部采用高级蓝调及柔和色系
         var MOOD_MAP = {
-            '平静': { color: '#43a047' }, '愉悦': { color: '#f5a623' }, '担忧': { color: '#c9a227' },
-            '疲惫': { color: '#8a8f99' }, '想念': { color: '#e08fb0' }, '吃醋': { color: '#d96a6a' }
+            '平静': { color: '#4a90e2' }, // 主题蓝
+            '愉悦': { color: '#f5a623' }, // 暖橙
+            '担忧': { color: '#9b59b6' }, // 紫
+            '疲惫': { color: '#95a5a6' }, // 灰蓝
+            '想念': { color: '#e84393' }, // 粉
+            '吃醋': { color: '#e67e22' }  // 橘红
         };
 
         function getStore(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
         function setStore(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
         function removeStore(key) { try { localStorage.removeItem(key); } catch(e) {} }
+
+        // ================= 日期与时间 =================
+        function getTimeString() {
+            var d = new Date();
+            return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // 微信规则：今天、昨天、星期几、具体日期
+        function formatDate(ts) {
+            var now = new Date();
+            var msgDate = new Date(ts);
+            var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            var target = new Date(msgDate.getFullYear(), msgDate.getMonth(), msgDate.getDate());
+            var diff = Math.floor((today - target) / (24 * 60 * 60 * 1000));
+
+            if (diff === 0) return '今天';
+            if (diff === 1) return '昨天';
+            if (diff > 1 && diff < 7) {
+                var weeks = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+                return weeks[msgDate.getDay()];
+            }
+            return (msgDate.getMonth() + 1) + '月' + msgDate.getDate() + '日';
+        }
+
+        function appendDateDivider(ts) {
+            var key = new Date(ts).toDateString();
+            if (key !== lastDate) {
+                lastDate = key;
+                var div = document.createElement('div');
+                div.className = 'date-divider';
+                div.textContent = formatDate(ts);
+                chatMessages.appendChild(div);
+            }
+        }
 
         // ================= 情绪解析 =================
         function extractMood(raw) {
@@ -297,23 +346,6 @@
         }
 
         // ================= 消息渲染 =================
-        function getTimeString() {
-            var d = new Date();
-            return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        function appendDateDivider() {
-            var d = new Date();
-            var key = d.toDateString();
-            if (key !== lastDate) {
-                lastDate = key;
-                var div = document.createElement('div');
-                div.className = 'date-divider';
-                div.textContent = '今天';
-                chatMessages.appendChild(div);
-            }
-        }
-
         function createAvatar(sender) {
             var img = document.createElement('img');
             img.className = 'avatar';
@@ -329,15 +361,37 @@
         }
 
         function addMessage(text, sender, typing) {
+            var ts = Date.now();
             var container = document.createElement('div');
             container.className = 'message-wrapper ' + sender;
-            var msgId = 'msg-' + (++messageIdCounter) + '-' + Date.now();
+            var msgId = 'msg-' + (++messageIdCounter) + '-' + ts;
             container.dataset.id = msgId;
-            container.dataset.ts = Date.now();
-            appendDateDivider();
+            container.dataset.ts = ts;
+            
+            appendDateDivider(ts);
+            
             var avatar = createAvatar(sender);
             var div = document.createElement('div');
             div.className = 'message ' + sender;
+            
+            // 单条删除按钮
+            var delBtn = document.createElement('div');
+            delBtn.className = 'delete-btn';
+            delBtn.innerHTML = '✕';
+            delBtn.onclick = function(e) {
+                e.stopPropagation();
+                deleteSingleMessage(msgId, container);
+            };
+            div.appendChild(delBtn);
+
+            // 点击气泡显示删除按钮（移动端）
+            div.onclick = function(e) {
+                if (e.target === delBtn) return;
+                // 先移除其他气泡的 active
+                document.querySelectorAll('.message').forEach(function(m){ m.classList.remove('active'); });
+                div.classList.add('active');
+            };
+            
             var contentSpan = document.createElement('span');
             contentSpan.className = 'message-text';
             var timeSpan = document.createElement('span');
@@ -370,19 +424,49 @@
             }
         }
 
+        function deleteSingleMessage(msgId, container) {
+            showModal('删除消息', '确定要删除这条消息吗？', '删除', function() {
+                container.remove();
+                // 从本地存储中移除
+                var saved = getStore('chatHistory');
+                if (saved) {
+                    try {
+                        var msgs = JSON.parse(saved);
+                        var newMsgs = msgs.filter(function(m){ return m.id !== msgId; });
+                        setStore('chatHistory', JSON.stringify(newMsgs));
+                    } catch(e){}
+                }
+                reorganizeDividers();
+            });
+        }
+
+        function reorganizeDividers() {
+            document.querySelectorAll('.date-divider').forEach(function(el){ el.remove(); });
+            lastDate = '';
+            document.querySelectorAll('.message-wrapper').forEach(function(wrapper) {
+                var ts = parseInt(wrapper.dataset.ts) || Date.now();
+                var key = new Date(ts).toDateString();
+                if (key !== lastDate) {
+                    lastDate = key;
+                    var div = document.createElement('div');
+                    div.className = 'date-divider';
+                    div.textContent = formatDate(ts);
+                    wrapper.parentNode.insertBefore(div, wrapper);
+                }
+            });
+        }
+
         function saveMessages() {
             var items = [];
-            var wrappers = document.querySelectorAll('.message-wrapper');
-            for (var i = 0; i < wrappers.length; i++) {
-                var el = wrappers[i];
+            document.querySelectorAll('.message-wrapper').forEach(function(el) {
                 var textSpan = el.querySelector('.message-text');
                 items.push({
                     id: el.dataset.id,
-                    ts: el.dataset.ts,
-                    sender: el.className.indexOf('user') > -1 ? 'user' : 'bot',
+                    ts: parseInt(el.dataset.ts),
+                    sender: el.classList.contains('user') ? 'user' : 'bot',
                     text: textSpan ? textSpan.textContent : ''
                 });
-            }
+            });
             setStore('chatHistory', JSON.stringify(items));
         }
 
@@ -399,16 +483,34 @@
                     container.className = 'message-wrapper ' + msg.sender;
                     container.dataset.id = msg.id;
                     container.dataset.ts = msg.ts;
-                    appendDateDivider();
+                    appendDateDivider(msg.ts);
+                    
                     var avatar = createAvatar(msg.sender);
                     var div = document.createElement('div');
                     div.className = 'message ' + msg.sender;
+                    
+                    var delBtn = document.createElement('div');
+                    delBtn.className = 'delete-btn';
+                    delBtn.innerHTML = '✕';
+                    delBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        deleteSingleMessage(this.parentNode.parentNode.dataset.id, this.parentNode.parentNode);
+                    };
+                    div.appendChild(delBtn);
+                    
+                    div.onclick = function(e) {
+                        if (e.target.className === 'delete-btn') return;
+                        document.querySelectorAll('.message').forEach(function(m){ m.classList.remove('active'); });
+                        this.classList.add('active');
+                    };
+
                     var contentSpan = document.createElement('span');
                     contentSpan.className = 'message-text';
                     contentSpan.textContent = msg.text;
                     var timeSpan = document.createElement('span');
                     timeSpan.className = 'time';
-                    timeSpan.textContent = '--:--';
+                    timeSpan.textContent = new Date(msg.ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                    
                     div.appendChild(contentSpan);
                     div.appendChild(timeSpan);
                     container.appendChild(avatar);
@@ -529,18 +631,6 @@
             });
         }
 
-        // ================= 菜单面板逻辑 =================
-        var menuBtn = document.getElementById('menuBtn');
-        var dropdown = document.getElementById('dropdownMenu');
-        menuBtn.onclick = function(e) {
-            e.stopPropagation();
-            var rect = menuBtn.getBoundingClientRect();
-            dropdown.style.left = (rect.left + rect.width - 160) + 'px';
-            dropdown.style.top = (rect.bottom + 10) + 'px';
-            dropdown.classList.toggle('show');
-        };
-        document.addEventListener('click', function() { dropdown.classList.remove('show'); });
-
         // ================= 自定义背景 =================
         var bgUpload = document.getElementById('bgUpload');
         function triggerBgUpload() { bgUpload.click(); }
@@ -604,7 +694,7 @@
             musicPlayer.classList.toggle('expanded');
         };
 
-        // 最小化按钮
+        // 收起 / 关闭音乐
         document.getElementById('musicMinimize').onclick = function(e) {
             e.stopPropagation();
             if (window.innerWidth <= 640) {
@@ -613,6 +703,15 @@
                 musicPlayer.style.display = 'none';
             }
         };
+
+        // 菜单重新打开音乐
+        function toggleMusicPlayer() {
+            if (window.innerWidth <= 640) {
+                musicPlayer.classList.toggle('expanded');
+            } else {
+                musicPlayer.style.display = musicPlayer.style.display === 'none' ? 'block' : 'none';
+            }
+        }
 
         // 进度条与时间显示
         audio.ontimeupdate = function() {
@@ -627,6 +726,26 @@
         progressSlider.oninput = function() {
             if (audio.duration) audio.currentTime = parseFloat(this.value) * audio.duration;
         };
+
+        // ================= 菜单面板 =================
+        var menuBtn = document.getElementById('menuBtn');
+        var dropdown = document.getElementById('dropdownMenu');
+        menuBtn.onclick = function(e) {
+            e.stopPropagation();
+            var rect = menuBtn.getBoundingClientRect();
+            dropdown.style.left = (rect.left + rect.width - 130) + 'px';
+            dropdown.style.top = (rect.bottom + 10) + 'px';
+            dropdown.classList.toggle('show');
+        };
+        document.addEventListener('click', function(e) { 
+            if (!dropdown.contains(e.target) && e.target !== menuBtn) {
+                dropdown.classList.remove('show'); 
+            }
+            // 点击其他地方隐藏气泡删除按钮
+            if (!e.target.closest('.message')) {
+                document.querySelectorAll('.message').forEach(function(m){ m.classList.remove('active'); });
+            }
+        });
 
         // ================= 特效与拖拽 =================
         function initEffects() {
