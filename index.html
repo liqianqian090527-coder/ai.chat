@@ -6,87 +6,14 @@
     <title>💙 与他的邂逅</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
+        /* ===== 基础重置 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Georgia', 'PingFang SC', serif; height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding-top: 4vh;
             background: url('images/bg.jpg') no-repeat center center fixed; background-size: cover; transition: all 0.5s ease; margin: 0; position: relative; overflow: hidden;
         }
-        
-        /* ===== 聊天容器 ===== */
-        .chat-container {
-            width: 580px; height: 740px; max-width: 94vw; max-height: 85vh; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
-            border-radius: 40px; box-shadow: 0 30px 80px rgba(0,0,0,0.35); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); position: relative; z-index: 10; transition: all 0.4s ease; margin: 0 auto;
-        }
-        
-        /* ===== 头部 ===== */
-        .chat-nav { display: flex; align-items: center; padding: 14px 20px 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); flex-shrink: 0; gap: 12px; }
-        .nav-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.6); flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #0a1a2e; overflow: hidden; }
-        .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .nav-info { flex: 1; }
-        .nav-name { font-size: 17px; font-weight: 500; color: #0a1a2e; }
-        .nav-status { font-size: 12px; color: #0a1a2e; opacity: 0.75; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-        .nav-status .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #43a047; flex-shrink: 0; transition: background 0.4s, box-shadow 0.4s; }
-        .nav-menu { background: none; border: none; color: #0a1a2e; font-size: 18px; cursor: pointer; opacity: 0.5; padding: 4px 8px; }
-        
-        /* ===== 聊天区域 ===== */
-        .chat-messages { flex: 1; padding: 16px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
-        .chat-messages::-webkit-scrollbar { width: 4px; }
-        .chat-messages::-webkit-scrollbar-thumb { background: rgba(44, 62, 80, 0.2); border-radius: 10px; }
-        
-        .message-wrapper { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 4px; animation: messageSlideIn 0.35s ease-out; }
-        @keyframes messageSlideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .message-wrapper.user { justify-content: flex-end; }
-        .message-wrapper.user .avatar { order: 1; }
-        .avatar { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #0a1a2e; border: 2px solid rgba(255,255,255,0.6); overflow: hidden; }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .message { padding: 14px 20px; border-radius: 20px; max-width: 76%; word-wrap: break-word; line-height: 1.6; font-size: 16px; position: relative; }
-        .message.user { background: linear-gradient(135deg, #d8eeff 0%, #a4c9f0 45%, #c3e2f8 100%); color: #0a1a2e; border-bottom-right-radius: 4px; border: 1px solid rgba(255,255,255,0.35); }
-        .message.bot { background: rgba(255, 255, 255, 0.95); color: #0a1a2e; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.5); }
-        .message .time { font-size: 10px; opacity: 0.35; margin-left: 8px; display: inline-block; color: #0a1a2e; }
-        
-        /* 打字机指示器 */
-        .typing-indicator { align-self: flex-start; display: flex; align-items: center; gap: 4px; padding: 14px 20px; border-radius: 20px; border-bottom-left-radius: 4px; background: rgba(255, 255, 255, 0.95); margin-bottom: 4px; }
-        .typing-indicator span { width: 6px; height: 6px; background: #5a7a9a; border-radius: 50%; animation: typingBounce 1.2s ease-in-out infinite; }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes typingBounce { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
 
-        /* ===== 输入区 ===== */
-        .chat-input-area { display: flex; padding: 10px 16px 14px 16px; background: rgba(255,255,255,0.04); border-top: 1px solid rgba(255,255,255,0.06); gap: 10px; align-items: center; }
-        .chat-input-area input { flex: 1; padding: 10px 18px; border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; background: rgba(255,255,255,0.25); outline: none; font-size: 15px; color: #0a1a2e; min-height: 44px; }
-        .chat-input-area button { padding: 10px 22px; background: #3b82f6; color: white; border: none; border-radius: 24px; font-size: 15px; cursor: pointer; font-weight: 500; flex-shrink: 0; min-height: 44px; }
-
-        /* ===== 夜间模式 ===== */
-        body.night-mode .chat-container { background: rgba(0, 0, 0, 0.65); border-color: rgba(255,255,255,0.08); }
-        body.night-mode .nav-name { color: #e8f0fe; }
-        body.night-mode .nav-status { color: #b0c4de; }
-        body.night-mode .nav-menu { color: #c8d6e5; }
-        body.night-mode .message.user { background: #1e3a5f; color: #eef6ff; }
-        body.night-mode .message.bot { background: rgba(255, 255, 255, 0.92); color: #0a1a2e; }
-        body.night-mode .chat-input-area input { background: rgba(255,255,255,0.08); color: #e8f0fe; }
-        body.night-mode .chat-input-area button { background: #1e3a5f; }
-        body.night-mode .typing-indicator { background: rgba(30, 50, 80, 0.6); }
-        body.night-mode .typing-indicator span { background: #b0c4de; }
-
-        .date-divider { text-align: center; font-size: 12px; color: rgba(10, 26, 46, 0.4); padding: 12px 0 8px 0; }
-        
-        /* ===== 下拉菜单 ===== */
-        .dropdown-menu { position: fixed; background: rgba(255,255,255,0.95); border-radius: 16px; padding: 8px 0; min-width: 160px; z-index: 9999; display: none; border: 1px solid rgba(0,0,0,0.1); }
-        .dropdown-menu.show { display: block; }
-        .dropdown-menu .menu-item { padding: 10px 20px; font-size: 14px; color: #0a1a2e; border: none; background: none; width: 100%; text-align: left; cursor: pointer; }
-        .dropdown-menu .menu-item:hover { background: rgba(0,0,0,0.05); }
-
-        /* ===== 桌面宠物 ===== */
-        .desktop-pet { position: fixed; z-index: 999; width: 240px; height: 240px; border-radius: 50%; cursor: grab; background: transparent; display: flex; align-items: center; justify-content: center; user-select: none; }
-        .desktop-pet:active { cursor: grabbing; }
-        .desktop-pet img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; pointer-events: none; }
-        .desktop-pet .pet-placeholder { font-size: 100px; color: #0a1a2e; opacity: 0.2; font-weight: 300; display: none; }
-        .pet-bubble { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-radius: 16px; padding: 10px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 16px; color: #0a1a2e; max-width: 200px; border: 1px solid rgba(255,255,255,0.3); opacity: 0; transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap; text-align: center; }
-        .pet-bubble.show { opacity: 1; }
-        .pet-bubble::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid rgba(255,255,255,0.85); }
-
-        /* ===== 冰雪特效 ===== */
+        /* ===== 特效层 ===== */
         .snow-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 998; overflow: hidden; }
         .snow-layer .flake { position: absolute; top: -30px; color: rgba(235, 246, 255, 0.85); filter: drop-shadow(0 0 4px rgba(200, 235, 255, 0.6)); animation: snowFall linear infinite; }
         @keyframes snowFall { 0% { transform: translateY(-6vh) translateX(0) rotate(0deg); opacity: 0; } 8% { opacity: 1; } 50% { transform: translateY(50vh) translateX(4vw) rotate(180deg); } 92% { opacity: 1; } 100% { transform: translateY(106vh) translateX(-2vw) rotate(360deg); opacity: 0; } }
@@ -99,6 +26,99 @@
         @keyframes auroraShift1 { 0% { transform: translateX(-6%) skewX(-8deg) scaleY(1); opacity: 0.7; } 50% { transform: translateX(3%) skewX(-4deg) scaleY(1.15); opacity: 1; } 100% { transform: translateX(8%) skewX(-10deg) scaleY(0.9); opacity: 0.75; } }
         @keyframes auroraShift2 { 0% { transform: translateX(5%) skewX(6deg) scaleY(1.1); opacity: 0.6; } 50% { transform: translateX(-3%) skewX(10deg) scaleY(0.95); opacity: 0.9; } 100% { transform: translateX(-8%) skewX(4deg) scaleY(1.2); opacity: 0.7; } }
 
+        /* ===== 聊天容器 ===== */
+        .chat-container {
+            width: 580px; height: 740px; max-width: 94vw; max-height: 85vh; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+            border-radius: 40px; box-shadow: 0 30px 80px rgba(0,0,0,0.35); display: flex; flex-direction: column; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); position: relative; z-index: 10; transition: all 0.4s ease; margin: 0 auto;
+        }
+
+        /* ===== 头部 ===== */
+        .chat-nav { display: flex; align-items: center; padding: 14px 20px 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); flex-shrink: 0; gap: 12px; }
+        .nav-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.6); flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #0a1a2e; overflow: hidden; }
+        .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .nav-info { flex: 1; }
+        .nav-name { font-size: 17px; font-weight: 500; color: #0a1a2e; }
+        .nav-status { font-size: 12px; color: #0a1a2e; opacity: 0.75; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+        .nav-status .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #43a047; flex-shrink: 0; transition: background 0.4s, box-shadow 0.4s; }
+        #moodText { transition: color 0.4s; }
+        .nav-menu { background: none; border: none; color: #0a1a2e; font-size: 18px; cursor: pointer; opacity: 0.5; padding: 4px 8px; }
+
+        /* ===== 聊天区 ===== */
+        .chat-messages { flex: 1; padding: 16px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: rgba(44, 62, 80, 0.2); border-radius: 10px; }
+        
+        .date-divider { text-align: center; font-size: 12px; color: rgba(10, 26, 46, 0.4); padding: 12px 0 8px 0; }
+        .message-wrapper { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 4px; animation: messageSlideIn 0.35s ease-out; }
+        @keyframes messageSlideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message-wrapper.user { justify-content: flex-end; }
+        .message-wrapper.user .avatar { order: 1; }
+        .avatar { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #0a1a2e; border: 2px solid rgba(255,255,255,0.6); overflow: hidden; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .message { padding: 14px 20px; border-radius: 20px; max-width: 76%; word-wrap: break-word; line-height: 1.6; font-size: 16px; position: relative; }
+        .message.user { background: linear-gradient(135deg, #d8eeff 0%, #a4c9f0 45%, #c3e2f8 100%); color: #0a1a2e; border-bottom-right-radius: 4px; border: 1px solid rgba(255,255,255,0.35); }
+        .message.bot { background: rgba(255, 255, 255, 0.95); color: #0a1a2e; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.5); }
+        .message .time { font-size: 10px; opacity: 0.35; margin-left: 8px; display: inline-block; color: #0a1a2e; }
+        
+        .typing-indicator { align-self: flex-start; display: flex; align-items: center; gap: 4px; padding: 14px 20px; border-radius: 20px; border-bottom-left-radius: 4px; background: rgba(255, 255, 255, 0.95); margin-bottom: 4px; }
+        .typing-indicator span { width: 6px; height: 6px; background: #5a7a9a; border-radius: 50%; animation: typingBounce 1.2s ease-in-out infinite; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes typingBounce { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+
+        /* ===== 输入区 ===== */
+        .chat-input-area { display: flex; padding: 10px 16px 14px 16px; background: rgba(255,255,255,0.04); border-top: 1px solid rgba(255,255,255,0.06); gap: 10px; align-items: center; }
+        .chat-input-area input { flex: 1; padding: 10px 18px; border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; background: rgba(255,255,255,0.25); outline: none; font-size: 15px; color: #0a1a2e; min-height: 44px; }
+        .chat-input-area button { padding: 10px 22px; background: #3b82f6; color: white; border: none; border-radius: 24px; font-size: 15px; cursor: pointer; font-weight: 500; flex-shrink: 0; min-height: 44px; }
+
+        /* ===== 音乐播放器 (桌面) ===== */
+        .music-player { position: fixed; top: 30px; right: 30px; z-index: 999; width: 300px; min-height: 110px; background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(24px); border-radius: 30px; padding: 18px 20px 16px 20px; border: 1px solid rgba(255, 255, 255, 0.25); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); user-select: none; cursor: grab; }
+        .music-player:active { cursor: grabbing; }
+        .music-player .music-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .music-player .music-header .track-name { color: #0a1a2e; font-size: 14px; font-weight: 500; }
+        .music-player .music-header .minimize-btn { background: none; border: none; color: #0a1a2e; cursor: pointer; opacity: 0.7; }
+        .music-body { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        .record-disc { width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #3a4a5a, #1a2a3a); position: relative; animation: spin 10s linear infinite; animation-play-state: paused; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .record-disc.playing { animation-play-state: running; }
+        .record-disc .center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; background: #a8c4d4; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .music-controls { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .music-controls button { background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 32px; height: 32px; color: #0a1a2e; cursor: pointer; }
+        .progress-slider { flex: 1; height: 3px; -webkit-appearance: none; background: rgba(26,47,74,0.15); border-radius: 4px; }
+        
+        /* 手机端音乐按钮 */
+        .mobile-music-icon { display: none; }
+
+        /* ===== 下拉菜单 ===== */
+        .dropdown-menu { position: fixed; background: rgba(255,255,255,0.95); border-radius: 16px; padding: 8px 0; min-width: 160px; z-index: 9999; display: none; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .dropdown-menu.show { display: block; }
+        .dropdown-menu .menu-item { padding: 10px 20px; font-size: 14px; color: #0a1a2e; border: none; background: none; width: 100%; text-align: left; cursor: pointer; }
+        .dropdown-menu .menu-item:hover { background: rgba(0,0,0,0.05); }
+
+        /* ===== 桌面宠物 ===== */
+        .desktop-pet { position: fixed; z-index: 999; width: 240px; height: 240px; border-radius: 50%; cursor: grab; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .desktop-pet:active { cursor: grabbing; }
+        .desktop-pet img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; pointer-events: none; }
+        .desktop-pet .pet-placeholder { font-size: 100px; color: #0a1a2e; opacity: 0.2; font-weight: 300; display: none; }
+        .pet-bubble { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-radius: 16px; padding: 10px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 16px; color: #0a1a2e; max-width: 200px; border: 1px solid rgba(255,255,255,0.3); opacity: 0; transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap; text-align: center; }
+        .pet-bubble.show { opacity: 1; }
+        .pet-bubble::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid rgba(255,255,255,0.85); }
+
+        /* ===== 夜间模式 ===== */
+        body.night-mode .chat-container { background: rgba(0, 0, 0, 0.65); border-color: rgba(255,255,255,0.08); }
+        body.night-mode .nav-name { color: #e8f0fe; }
+        body.night-mode .nav-status { color: #b0c4de; }
+        body.night-mode .nav-menu { color: #c8d6e5; }
+        body.night-mode .message.user { background: #1e3a5f; color: #eef6ff; }
+        body.night-mode .message.bot { background: rgba(255, 255, 255, 0.92); color: #0a1a2e; }
+        body.night-mode .chat-input-area input { background: rgba(255,255,255,0.08); color: #e8f0fe; }
+        body.night-mode .chat-input-area button { background: #1e3a5f; }
+        body.night-mode .typing-indicator { background: rgba(30, 50, 80, 0.6); }
+        body.night-mode .typing-indicator span { background: #b0c4de; }
+        body.night-mode .music-player { background: rgba(0,0,0,0.4); }
+        body.night-mode .music-player .track-name { color: #c8d6e5; }
+
         /* ===== 移动端适配 ===== */
         @media (max-width: 640px) {
             body { padding-top: 0; align-items: stretch; }
@@ -106,6 +126,11 @@
             .message { max-width: 82% !important; }
             .chat-input-area input, .chat-input-area button { min-height: 38px; font-size: 14px; }
             .desktop-pet { width: 70px; height: 70px; bottom: 110px !important; left: 10px !important; top: auto !important; right: auto !important; }
+            
+            /* 手机音乐播放器变成小圆圈 */
+            .music-player { top: 12px; right: 12px; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 9999; background: rgba(255, 255, 255, 0.25); border: 1px solid rgba(255,255,255,0.3); }
+            .music-player .music-header, .music-player .music-body { display: none !important; }
+            .mobile-music-icon { display: flex; font-size: 18px; color: #0a1a2e; width: 100%; height: 100%; align-items: center; justify-content: center; }
         }
     </style>
 </head>
@@ -114,6 +139,7 @@
     <div class="aurora-layer" id="auroraLayer"><div class="aurora-band a1"></div><div class="aurora-band a2"></div></div>
     <div class="snow-layer" id="snowLayer"></div>
 
+    <!-- 聊天主界面 -->
     <div class="chat-container">
         <div class="chat-nav">
             <div class="nav-avatar">
@@ -137,6 +163,30 @@
         </div>
     </div>
 
+    <!-- 下拉菜单 -->
+    <div class="dropdown-menu" id="dropdownMenu">
+        <button class="menu-item" onclick="exportChat()">导出对话</button>
+        <button class="menu-item" onclick="askSearch()">搜索对话</button>
+        <button class="menu-item" onclick="clearAllMessages()">清空对话</button>
+        <button class="menu-item" onclick="toggleTheme()">切换夜间模式</button>
+    </div>
+
+    <!-- 音乐播放器 -->
+    <div class="music-player" id="musicPlayer">
+        <span class="mobile-music-icon" id="mobileMusicToggle"><i class="fas fa-play"></i></span>
+        <div class="music-header">
+            <span class="track-name" id="trackName">🎵 正在播放</span>
+            <button class="minimize-btn" onclick="document.getElementById('musicPlayer').style.display='none'">✕</button>
+        </div>
+        <div class="music-body">
+            <div class="record-disc" id="recordDisc"><div class="center-label">♪</div></div>
+            <div class="music-controls">
+                <button id="musicToggle"><i class="fas fa-play"></i></button>
+                <input type="range" class="progress-slider" id="progressSlider" min="0" max="1" step="0.001" value="0">
+            </div>
+        </div>
+    </div>
+
     <!-- 桌面宠物 -->
     <div class="desktop-pet" id="desktopPet">
         <img src="images/lishen_q.png" alt="黎深Q版" id="petImage" onerror="this.style.display='none'; document.getElementById('petPlaceholder').style.display='flex';">
@@ -144,14 +194,10 @@
         <div class="pet-bubble" id="petBubble"></div>
     </div>
 
-    <!-- 菜单 -->
-    <div class="dropdown-menu" id="dropdownMenu">
-        <button class="menu-item" onclick="clearAllMessages()">清空对话</button>
-        <button class="menu-item" onclick="toggleTheme()">切换夜间模式</button>
-    </div>
+    <audio id="bgAudio" src="images/bg-music.mp3" loop preload="auto"></audio>
 
     <script>
-        // ================= 纯基础语法，保证所有手机兼容 =================
+        // ================= 兼容性最强的核心逻辑 =================
         var API_URL = '/api/chat';
         var MODEL_NAME = 'qwen-plus';
         var CHARACTER_PROMPT = "你叫黎深，男、27岁，Akso医院心脏外科主任医师。年上稳重熟男，处事极度沉稳。你在和一个你喜欢的女孩面对面聊天。对话控制在40字以内。用'你'或者'宝宝'称呼她。只说你会当面说出口的话，不要描述动作或表情。绝不使用'哦、呀、呢、啦'等语气词。\n\n【系统强制输出要求，必须绝对遵守】\n无论你回复什么，回复的第一句必须且只能以 [mood:情绪词] 开头！\n例如：[mood:想念] 我也想你，早点休息。\n情绪词必须从这六个词里选：平静、愉悦、担忧、疲惫、想念、吃醋。\n如果缺少 [mood:情绪词] 这个开头，系统将判定你回复失败。";
@@ -171,6 +217,7 @@
         function setStore(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
         function removeStore(key) { try { localStorage.removeItem(key); } catch(e) {} }
 
+        // 解析情绪
         function extractMood(raw) {
             if (!raw) return { text: '', mood: null };
             var m = raw.match(/\[mood\s*[:：]\s*([^\]]+?)\s*\]/i);
@@ -367,7 +414,36 @@
         sendButton.onclick = sendMessage;
         userInput.onkeydown = function(e) { if (e.key === 'Enter') sendMessage(); };
 
+        // ================= 菜单控制 =================
         function toggleTheme() { document.body.classList.toggle('night-mode'); }
+        function askSearch() {
+            var kw = prompt('搜索包含哪些字的消息：');
+            if (kw) {
+                var found = 0;
+                document.querySelectorAll('.message-text').forEach(function(el) {
+                    if (el.textContent.indexOf(kw) > -1) {
+                        el.style.background = '#ffe58a';
+                        found++;
+                    } else {
+                        el.style.background = 'transparent';
+                    }
+                });
+                if (found === 0) alert('未找到包含该词的消息');
+            }
+        }
+        function exportChat() {
+            var text = "";
+            document.querySelectorAll('.message-wrapper').forEach(function(el) {
+                var s = el.classList.contains('user') ? '我' : '黎深';
+                var t = el.querySelector('.message-text');
+                if (t) text += s + "：" + t.textContent + "\n\n";
+            });
+            var blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "与黎深的对话.txt";
+            a.click();
+        }
 
         var menuBtn = document.getElementById('menuBtn');
         var dropdown = document.getElementById('dropdownMenu');
@@ -379,9 +455,41 @@
         };
         document.addEventListener('click', function() { dropdown.classList.remove('show'); });
 
+        // ================= 音乐控制 =================
+        var audio = document.getElementById('bgAudio');
+        var isPlaying = false;
+        var recordDisc = document.getElementById('recordDisc');
+        var desktopToggle = document.getElementById('musicToggle');
+        var mobileToggle = document.getElementById('mobileMusicToggle');
+        
+        function togglePlay() {
+            if (audio.paused) { 
+                audio.play().then(function(){ 
+                    isPlaying = true; 
+                    recordDisc.classList.add('playing'); 
+                    if(desktopToggle) desktopToggle.innerHTML = '<i class="fas fa-pause"></i>'; 
+                    if(mobileToggle) mobileToggle.innerHTML = '<i class="fas fa-pause"></i>'; 
+                }).catch(function(){}); 
+            } else { 
+                audio.pause(); 
+                isPlaying = false; 
+                recordDisc.classList.remove('playing'); 
+                if(desktopToggle) desktopToggle.innerHTML = '<i class="fas fa-play"></i>'; 
+                if(mobileToggle) mobileToggle.innerHTML = '<i class="fas fa-play"></i>'; 
+            }
+        }
+        if(desktopToggle) desktopToggle.onclick = togglePlay;
+        if(mobileToggle) mobileToggle.onclick = togglePlay;
+        document.getElementById('progressSlider').oninput = function() {
+            if (audio.duration) audio.currentTime = parseFloat(this.value) * audio.duration;
+        };
+        audio.ontimeupdate = function() {
+            if (audio.duration) document.getElementById('progressSlider').value = audio.currentTime / audio.duration;
+        };
+
         // ================= 特效与拖拽逻辑 =================
         function initEffects() {
-            // 1. 雪花特效
+            // 雪花
             var layer = document.getElementById('snowLayer');
             if (layer) {
                 var flakes = ['❄', '❅', '❆', '✦'];
@@ -399,14 +507,11 @@
                     layer.appendChild(el);
                 }
             }
-
-            // 2. 极光渐入
+            // 极光
             var aurora = document.getElementById('auroraLayer');
-            if (aurora) {
-                setTimeout(function() { aurora.classList.add('show'); }, 800);
-            }
+            if (aurora) setTimeout(function() { aurora.classList.add('show'); }, 800);
 
-            // 3. 桌面宠物控制
+            // 宠物控制
             var pet = document.getElementById('desktopPet');
             var bubble = document.getElementById('petBubble');
             if (pet && bubble) {
@@ -420,17 +525,9 @@
                     clearTimeout(bubbleTimeout);
                     bubbleTimeout = setTimeout(function() { bubble.classList.remove('show'); }, 2500);
                 };
-                window.addEventListener('load', function () {
-                    var c = document.querySelector('.chat-container');
-                    if (c) {
-                        var rect = c.getBoundingClientRect();
-                        pet.style.left = (rect.right - 260) + 'px';
-                        pet.style.top = (rect.bottom - 260) + 'px';
-                    }
-                });
             }
 
-            // 4. 拖拽功能
+            // 拖拽
             function makeDraggable(element) {
                 if (!element) return;
                 var isDragging = false, startX = 0, startY = 0, origX = 0, origY = 0;
@@ -469,9 +566,10 @@
                 element.addEventListener('pointercancel', endDrag);
             }
             makeDraggable(document.getElementById('desktopPet'));
+            makeDraggable(document.getElementById('musicPlayer'));
         }
 
-        // 初始化
+        // ================= 启动 =================
         window.onload = function() {
             initEffects();
             loadMessages();
@@ -479,6 +577,14 @@
             var last = getStore('last_chat_time');
             if (!last || (Date.now() - parseInt(last) > 10 * 60 * 1000)) {
                 addMessage('你来了。我一直在等你。', 'bot', true);
+            }
+            // 宠物初始位置
+            var pet = document.getElementById('desktopPet');
+            var container = document.querySelector('.chat-container');
+            if (pet && container) {
+                var rect = container.getBoundingClientRect();
+                pet.style.left = (rect.right - 260) + 'px';
+                pet.style.top = (rect.bottom - 260) + 'px';
             }
         };
     </script>
