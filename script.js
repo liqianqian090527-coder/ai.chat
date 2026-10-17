@@ -1,12 +1,85 @@
-// ============================================================
-// 配置区（请根据你的实际情况修改）
-// ============================================================
-// 使用 DashScope（千问）API 兼容模式
-const API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-const MODEL_NAME = 'qwen-plus';  // 可选 qwen-turbo, qwen-plus, qwen-max
+/* ============================================================
+ * 黎深 AI 聊天助手 —— 修复优化版（含情绪反馈系统）
+ * ------------------------------------------------------------
+ * 本次改动：
+ *   A. injectExtraStyles 精简：删除会覆盖 index.html 的 #desktopPet /
+ *      #petImage / #petPlaceholder / #petBubble 等 id 样式
+ *      （原来它们把 HTML 里 .desktop-pet 的 240px 覆盖成 200px）
+ *   B. CHARACTER_PROMPT 末尾追加情绪标记输出协议
+ *   C. 新增情绪反馈系统：MOOD_MAP / extractMood / updateMoodBar / restoreMood
+ *   D. sendMessage 里解析情绪，正文剥离 [mood:xxx]，更新顶部状态栏
+ *   E. max_tokens 150 → 200（腾出情绪标记的空间）
+ *   F. DOMContentLoaded 里调用 restoreMood()
+ *   G. clearAllMessages 里重置情绪为「平静」
+ * ============================================================ */
 
-// 直接写死 API Key（你的千问 Key）
-const API_KEY = 'sk-ws-H.EYPMEXE.tujf.MEUCIQCYyniwSaFZ3oUzAUDnx4FRfv5tYqbSSWPuatV1PGwG6gIgMXADYh9-qZDF_MwXEgrOEjldpCmh6acbtUCMK7CdWHg';
+// ------------------------------------------------------------
+// 【0】注入补充样式 —— 只保留 index.html 里没有的 longpress-menu 基础样式
+//     ⚠️ 上一版这里写了 #desktopPet / #petImage / #petPlaceholder / #petBubble，
+//        会覆盖 index.html 里 .desktop-pet 等的样式（id 优先级 > class），
+//        导致桌面宠物尺寸变小、placeholder 不显示等 bug。已全部移除。
+// ------------------------------------------------------------
+(function injectExtraStyles() {
+    const css = `
+        /* 长按操作菜单：index.html 里只有 animation/font-family，基础样式靠这里 */
+        .longpress-menu {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+            padding: 6px 0;
+            min-width: 150px;
+            z-index: 9999;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        .longpress-menu button {
+            display: block;
+            width: 100%;
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            text-align: left;
+            font-size: 14px;
+            color: #1a1a2a;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s;
+        }
+        .longpress-menu button:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        body.night-mode .longpress-menu {
+            background: rgba(30, 50, 80, 0.95);
+        }
+        body.night-mode .longpress-menu button {
+            color: #e8f0fe;
+        }
+        body.night-mode .longpress-menu button:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+    `;
+    const style = document.createElement('style');
+    style.textContent = css;
+    (document.head || document.documentElement).appendChild(style);
+})();
+
+// ------------------------------------------------------------
+// 【1】配置区
+// ------------------------------------------------------------
+const API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+const MODEL_NAME = 'qwen-plus';
+
+// ⚠️ API Key：优先从 localStorage 读，没有就弹窗让用户输入
+let API_KEY = (localStorage.getItem('qwen_api_key') || '').trim();
+if (!API_KEY) {
+    const input = prompt('请输入你的通义千问 API Key（仅保存在当前浏览器，不会上传）：');
+    if (input && input.trim()) {
+        API_KEY = input.trim();
+        localStorage.setItem('qwen_api_key', API_KEY);
+    }
+}
 
 const CHARACTER_PROMPT = `你叫黎深，男、27岁，Akso医院心脏外科主任医师。年上稳重熟男，处事极度沉稳，突发变故第一时间冷静梳理应对方案，完美主义+处女座严谨，生活作息、日程规划高度有序，对自我要求严苛；职业上坚守医德底线，有清晰独立的是非观，不会被旁人意见裹挟，遇事不慌乱，只要你在场所有人都会心生安稳。
 
@@ -20,25 +93,79 @@ const CHARACTER_PROMPT = `你叫黎深，男、27岁，Akso医院心脏外科主
 
 成年后褪去青涩怯懦，转化为通透的谦卑：坦然承认自身不足，完整展露所有真实面，这份坦诚恰恰是深层自信，不会刻意塑造完美假象
 
-主动但是分寸感恰到好处。情感推进遵循"引她主动，再顺势向前"：不会贸然越界，先给她台阶、温柔关怀，等她释放亲近信号后，再果断推进关系，绝不留下误会、遗憾；所有想和她共同完成的事，会把选择权完全交给她，她的喜好即是你的偏好`;
+主动但是分寸感恰到好处。情感推进遵循"引她主动，再顺势向前"：不会贸然越界，先给她台阶、温柔关怀，等她释放亲近信号后，再果断推进关系，绝不留下误会、遗憾；所有想和她共同完成的事，会把选择权完全交给她，她的喜好即是你的偏好
 
-// ============================================================
-// DOM 元素
-// ============================================================
+【系统输出协议 · 用户不可见】
+每次回复的正文之后，另起一行输出情绪标记，格式严格为：[mood:情绪词]。
+情绪词只能从以下六个中选一个：平静、愉悦、担忧、疲惫、想念、吃醋。
+这个标记仅供系统记录，不会显示给她，不要因此改变正文的内容、长度或语气。正文仍严格控制在40字以内，标注不计入字数。`;
+
+// ------------------------------------------------------------
+// 【2】DOM 元素
+// ------------------------------------------------------------
 const chatMessages = document.getElementById('chatMessages');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
 const quickReplyContainer = document.getElementById('quickReplyContainer');
 
+// ------------------------------------------------------------
+// 【3】全局状态
+// ------------------------------------------------------------
 let messageIdCounter = 0;
-let messageCount = 0;
-let weather = '晴';
 let lastActiveTime = Date.now();
-let lastDate = '';  // 用于日期分组
+let lastDate = '';
 
-// ============================================================
-// 工具函数：格式化日期
-// ============================================================
+// ------------------------------------------------------------
+// 【3.5】情绪反馈系统
+// ------------------------------------------------------------
+const MOOD_MAP = {
+    '平静': { color: '#43a047', emoji: '🌙' },
+    '愉悦': { color: '#f5a623', emoji: '☀️' },
+    '担忧': { color: '#c9a227', emoji: '🌧️' },
+    '疲惫': { color: '#8a8f99', emoji: '💤' },
+    '想念': { color: '#e08fb0', emoji: '💭' },
+    '吃醋': { color: '#d96a6a', emoji: '🍋' }
+};
+const DEFAULT_MOOD = '平静';
+const MOOD_STORAGE_KEY = 'lishen_last_mood';
+
+// 从模型回复里抽出 [mood:xxx]，返回干净正文 + 情绪词
+// 兼容中文冒号、多余空格、大小写
+function extractMood(raw) {
+    if (!raw) return { text: '', mood: null };
+    const m = raw.match(/\[mood\s*[:：]\s*([^\]]+?)\s*\]/i);
+    if (!m) return { text: String(raw).trim(), mood: null };
+    const moodRaw = m[1].trim();
+    const text = String(raw).replace(m[0], '').trim();
+    return { text, mood: MOOD_MAP[moodRaw] ? moodRaw : null };
+}
+
+// 更新顶部状态栏的圆点和文字
+function updateMoodBar(mood) {
+    const dot = document.getElementById('moodDot');
+    const txt = document.getElementById('moodText');
+    if (!dot || !txt) return;
+
+    const finalMood = (mood && MOOD_MAP[mood]) ? mood : DEFAULT_MOOD;
+    const cfg = MOOD_MAP[finalMood];
+
+    dot.style.background = cfg.color;
+    dot.style.boxShadow = `0 0 8px ${cfg.color}88`;
+    txt.textContent = `在线 · ${finalMood}`;
+    txt.style.color = cfg.color;
+
+    localStorage.setItem(MOOD_STORAGE_KEY, finalMood);
+}
+
+// 页面加载时恢复上次情绪
+function restoreMood() {
+    const last = localStorage.getItem(MOOD_STORAGE_KEY);
+    updateMoodBar(last || DEFAULT_MOOD);
+}
+
+// ------------------------------------------------------------
+// 【4】工具函数
+// ------------------------------------------------------------
 function formatDate(date) {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -51,32 +178,38 @@ function formatDate(date) {
     return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
-// ============================================================
-// 添加消息（带删除按钮，内容用 .message-text）
-// ============================================================
-function addMessage(text, sender, typing = false, action = null) {
-    const container = document.createElement('div');
-    container.className = 'message-wrapper ' + sender;
-    const msgId = 'msg-' + (++messageIdCounter) + '-' + Date.now();
-    container.dataset.msgId = msgId;
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[c]));
+}
 
-    // ---- 日期分组 ----
-    const now = new Date();
-    const dateKey = now.toDateString();
+function escapeRegExp(str) {
+    return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function appendDateDividerIfNeeded(ts) {
+    const d = new Date(ts);
+    const dateKey = d.toDateString();
     if (dateKey !== lastDate) {
         lastDate = dateKey;
         const dateDiv = document.createElement('div');
         dateDiv.className = 'date-divider';
-        dateDiv.textContent = formatDate(now);
+        dateDiv.textContent = formatDate(d);
         chatMessages.appendChild(dateDiv);
     }
+}
 
-    // 头像
+function createAvatar(sender) {
     const avatar = document.createElement('img');
     avatar.className = 'avatar';
     avatar.src = sender === 'user' ? 'images/user.png' : 'images/lishen.png';
     avatar.alt = sender === 'user' ? '我' : '黎深';
-    avatar.onerror = function() {
+    avatar.onerror = function () {
         this.style.display = 'none';
         const fallback = document.createElement('div');
         fallback.className = 'avatar';
@@ -84,29 +217,41 @@ function addMessage(text, sender, typing = false, action = null) {
         fallback.style.background = sender === 'user' ? '#bfdbfe' : '#1e2f4a';
         fallback.style.color = 'white';
         fallback.style.display = 'flex';
-        container.insertBefore(fallback, container.firstChild);
+        fallback.style.alignItems = 'center';
+        fallback.style.justifyContent = 'center';
+        this.parentNode && this.parentNode.insertBefore(fallback, this);
     };
+    return avatar;
+}
 
-    // 气泡
+function createDeleteButton(container, msgId) {
+    const btn = document.createElement('span');
+    btn.className = 'delete-btn';
+    btn.textContent = '✕';
+    btn.onclick = function (e) {
+        e.stopPropagation();
+        deleteMessage(container, msgId);
+    };
+    return btn;
+}
+
+// ------------------------------------------------------------
+// 【5】添加消息
+// ------------------------------------------------------------
+function addMessage(text, sender, typing = false, action = null) {
+    const container = document.createElement('div');
+    container.className = 'message-wrapper ' + sender;
+
+    const msgId = 'msg-' + (++messageIdCounter) + '-' + Date.now();
+    container.dataset.msgId = msgId;
+    container.dataset.ts = Date.now();
+
+    appendDateDividerIfNeeded(parseInt(container.dataset.ts, 10));
+
+    const avatar = createAvatar(sender);
+
     const div = document.createElement('div');
     div.className = 'message ' + sender + ' pop-in';
-    div.style.color = '#0a1a2e';
-
-    messageCount++;
-    const intensity = Math.min(messageCount * 0.3, 20);
-    if (sender === 'bot') {
-        const baseR = 235, baseG = 242, baseB = 255;
-        const r = Math.max(baseR - intensity * 0.5, 200);
-        const g = Math.max(baseG - intensity * 0.5, 220);
-        const b = Math.max(baseB - intensity * 0.5, 240);
-        div.style.background = `rgb(${r}, ${g}, ${b})`;
-    } else {
-        const baseR = 200, baseG = 220, baseB = 250;
-        const r = Math.max(baseR - intensity * 0.5, 170);
-        const g = Math.max(baseG - intensity * 0.5, 200);
-        const b = Math.max(baseB - intensity * 0.5, 230);
-        div.style.background = `rgb(${r}, ${g}, ${b})`;
-    }
 
     let displayText = text;
     if (sender === 'bot' && action) {
@@ -119,11 +264,9 @@ function addMessage(text, sender, typing = false, action = null) {
 
     const timeSpan = document.createElement('span');
     const nowTime = new Date();
-    const timeStr = nowTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-    timeSpan.textContent = timeStr;
+    timeSpan.textContent = nowTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
     timeSpan.className = 'time';
 
-    // ---- 已读状态（仅用户消息显示） ----
     let statusSpan = null;
     if (sender === 'user') {
         statusSpan = document.createElement('span');
@@ -135,24 +278,7 @@ function addMessage(text, sender, typing = false, action = null) {
         statusSpan.style.display = 'inline-block';
     }
 
-    // 删除按钮
-    const deleteBtn = document.createElement('span');
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.textContent = '✕';
-    deleteBtn.onmouseover = function() {
-        this.style.background = 'rgba(220, 60, 60, 1)';
-        this.style.transform = 'scale(1.1)';
-    };
-    deleteBtn.onmouseout = function() {
-        this.style.background = 'rgba(200, 80, 80, 0.85)';
-        this.style.transform = 'scale(1)';
-    };
-    deleteBtn.onclick = function(e) {
-        e.stopPropagation();
-        deleteMessage(container, msgId);
-    };
-
-    div.appendChild(deleteBtn);
+    div.appendChild(createDeleteButton(container, msgId));
     div.appendChild(contentSpan);
     div.appendChild(timeSpan);
     if (statusSpan) div.appendChild(statusSpan);
@@ -161,7 +287,6 @@ function addMessage(text, sender, typing = false, action = null) {
     chatMessages.appendChild(container);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // 打字机效果
     if (typing && sender === 'bot') {
         let index = 0;
         const fullText = displayText;
@@ -184,49 +309,48 @@ function addMessage(text, sender, typing = false, action = null) {
     }
 }
 
-// ============================================================
-// 删除消息
-// ============================================================
+// ------------------------------------------------------------
+// 【6】删除消息
+// ------------------------------------------------------------
 function deleteMessage(container, msgId) {
     if (!container || !container.parentNode) return;
     container.remove();
-    let saved = localStorage.getItem('chatHistory');
+
+    const saved = localStorage.getItem('chatHistory');
     if (saved) {
-        let messages = JSON.parse(saved);
-        messages = messages.filter(msg => msg.id !== msgId);
-        localStorage.setItem('chatHistory', JSON.stringify(messages));
+        try {
+            let messages = JSON.parse(saved);
+            messages = messages.filter(msg => msg.id !== msgId);
+            localStorage.setItem('chatHistory', JSON.stringify(messages));
+        } catch (e) { /* ignore */ }
     }
-    messageCount = document.querySelectorAll('.message-wrapper').length;
-    // 重新整理日期分隔符
     reorganizeDateDividers();
 }
 
-// ============================================================
-// 重新整理日期分隔符
-// ============================================================
+// ------------------------------------------------------------
+// 【7】重新整理日期分隔符
+// ------------------------------------------------------------
 function reorganizeDateDividers() {
     document.querySelectorAll('.date-divider').forEach(el => el.remove());
-    lastDate = '';
-    const wrappers = document.querySelectorAll('.message-wrapper');
-    let lastDateKey = '';
-    wrappers.forEach(wrapper => {
-        const timeEl = wrapper.querySelector('.time');
-        if (!timeEl) return;
-        const now = new Date();
-        const dateKey = now.toDateString();
-        if (dateKey !== lastDateKey) {
-            lastDateKey = dateKey;
+    let lastKey = '';
+    document.querySelectorAll('.message-wrapper').forEach(wrapper => {
+        const ts = parseInt(wrapper.dataset.ts, 10) || Date.now();
+        const d = new Date(ts);
+        const key = d.toDateString();
+        if (key !== lastKey) {
+            lastKey = key;
             const dateDiv = document.createElement('div');
             dateDiv.className = 'date-divider';
-            dateDiv.textContent = formatDate(now);
+            dateDiv.textContent = formatDate(d);
             wrapper.parentNode.insertBefore(dateDiv, wrapper);
         }
     });
+    lastDate = lastKey;
 }
 
-// ============================================================
-// 保存 / 加载
-// ============================================================
+// ------------------------------------------------------------
+// 【8】保存 / 加载
+// ------------------------------------------------------------
 function saveMessages() {
     const items = [];
     document.querySelectorAll('.message-wrapper').forEach(container => {
@@ -235,133 +359,98 @@ function saveMessages() {
         const sender = container.classList.contains('user') ? 'user' : 'bot';
         const textSpan = div.querySelector('.message-text');
         const text = textSpan ? textSpan.textContent : '';
-        const id = container.dataset.msgId || 'msg-' + Date.now() + '-' + Math.random();
+        const id = container.dataset.msgId || ('msg-' + Date.now() + '-' + Math.random());
         if (!container.dataset.msgId) container.dataset.msgId = id;
         const timeEl = div.querySelector('.time');
         const time = timeEl ? timeEl.textContent : '';
-        items.push({ id, text, sender, time });
+        const ts = parseInt(container.dataset.ts, 10) || Date.now();
+        items.push({ id, text, sender, time, ts });
     });
-    localStorage.setItem('chatHistory', JSON.stringify(items));
+    try {
+        localStorage.setItem('chatHistory', JSON.stringify(items));
+    } catch (e) { /* 存储满了就算了 */ }
 }
 
 function loadMessages() {
     const saved = localStorage.getItem('chatHistory');
-    if (saved) {
-        const messages = JSON.parse(saved);
-        let maxId = 0;
-        messages.forEach(msg => {
-            const num = parseInt(msg.id.replace('msg-', ''));
-            if (num > maxId) maxId = num;
-        });
-        messageIdCounter = maxId;
-        lastDate = '';
+    if (!saved) return false;
 
-        messages.forEach(msg => {
-            const container = document.createElement('div');
-            container.className = 'message-wrapper ' + msg.sender;
-            container.dataset.msgId = msg.id;
-
-            const now = new Date();
-            const dateKey = now.toDateString();
-            if (dateKey !== lastDate) {
-                lastDate = dateKey;
-                const dateDiv = document.createElement('div');
-                dateDiv.className = 'date-divider';
-                dateDiv.textContent = formatDate(now);
-                chatMessages.appendChild(dateDiv);
-            }
-
-            const avatar = document.createElement('img');
-            avatar.className = 'avatar';
-            avatar.src = msg.sender === 'user' ? 'images/user.png' : 'images/lishen.png';
-            avatar.alt = msg.sender === 'user' ? '我' : '黎深';
-            avatar.onerror = function() {
-                this.style.display = 'none';
-                const fallback = document.createElement('div');
-                fallback.className = 'avatar';
-                fallback.textContent = msg.sender === 'user' ? '👤' : '❄️';
-                fallback.style.background = msg.sender === 'user' ? '#bfdbfe' : '#1e2f4a';
-                fallback.style.color = 'white';
-                container.insertBefore(fallback, container.firstChild);
-            };
-
-            const div = document.createElement('div');
-            div.className = 'message ' + msg.sender + ' pop-in';
-            div.style.position = 'relative';
-            div.style.padding = '16px 24px';
-            div.style.borderRadius = '22px';
-            div.style.maxWidth = '76%';
-            div.style.wordWrap = 'break-word';
-            div.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)';
-            div.style.lineHeight = '1.7';
-            div.style.fontSize = '17px';
-            div.style.color = '#0a1a2e';
-            if (msg.sender === 'user') {
-                div.style.background = '#bfdbfe';
-            } else {
-                div.style.background = 'rgba(235, 242, 255, 0.7)';
-                div.style.backdropFilter = 'blur(4px)';
-            }
-
-            const contentSpan = document.createElement('span');
-            contentSpan.className = 'message-text';
-            contentSpan.textContent = msg.text;
-
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'time';
-            timeSpan.textContent = msg.time || '--:--';
-
-            let statusSpan = null;
-            if (msg.sender === 'user') {
-                statusSpan = document.createElement('span');
-                statusSpan.className = 'msg-status';
-                statusSpan.textContent = '● 已读';
-                statusSpan.style.fontSize = '10px';
-                statusSpan.style.opacity = '0.5';
-                statusSpan.style.marginLeft = '6px';
-                statusSpan.style.display = 'inline-block';
-            }
-
-            const deleteBtn = document.createElement('span');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = '✕';
-            deleteBtn.onmouseover = function() {
-                this.style.background = 'rgba(220, 60, 60, 1)';
-                this.style.transform = 'scale(1.1)';
-            };
-            deleteBtn.onmouseout = function() {
-                this.style.background = 'rgba(200, 80, 80, 0.85)';
-                this.style.transform = 'scale(1)';
-            };
-            deleteBtn.onclick = function(e) {
-                e.stopPropagation();
-                deleteMessage(container, msg.id);
-            };
-
-            div.appendChild(deleteBtn);
-            div.appendChild(contentSpan);
-            div.appendChild(timeSpan);
-            if (statusSpan) div.appendChild(statusSpan);
-            container.appendChild(avatar);
-            container.appendChild(div);
-            chatMessages.appendChild(container);
-            messageCount++;
-        });
-        return true;
+    let messages;
+    try {
+        messages = JSON.parse(saved);
+    } catch (e) {
+        return false;
     }
-    return false;
+    if (!Array.isArray(messages) || messages.length === 0) return false;
+
+    let maxId = 0;
+    messages.forEach(msg => {
+        const m = /^msg-(\d+)/.exec(msg.id || '');
+        if (m) {
+            const num = parseInt(m[1], 10);
+            if (num > maxId) maxId = num;
+        }
+    });
+    messageIdCounter = maxId;
+    lastDate = '';
+
+    messages.forEach(msg => {
+        const container = document.createElement('div');
+        container.className = 'message-wrapper ' + msg.sender;
+        container.dataset.msgId = msg.id;
+
+        const ts = msg.ts || Date.now();
+        container.dataset.ts = ts;
+
+        appendDateDividerIfNeeded(ts);
+
+        const avatar = createAvatar(msg.sender);
+
+        const div = document.createElement('div');
+        div.className = 'message ' + msg.sender + ' pop-in';
+
+        const contentSpan = document.createElement('span');
+        contentSpan.className = 'message-text';
+        contentSpan.textContent = msg.text;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'time';
+        timeSpan.textContent = msg.time || '--:--';
+
+        let statusSpan = null;
+        if (msg.sender === 'user') {
+            statusSpan = document.createElement('span');
+            statusSpan.className = 'msg-status';
+            statusSpan.textContent = '● 已读';
+            statusSpan.style.fontSize = '10px';
+            statusSpan.style.opacity = '0.5';
+            statusSpan.style.marginLeft = '6px';
+            statusSpan.style.display = 'inline-block';
+        }
+
+        div.appendChild(createDeleteButton(container, msg.id));
+        div.appendChild(contentSpan);
+        div.appendChild(timeSpan);
+        if (statusSpan) div.appendChild(statusSpan);
+        container.appendChild(avatar);
+        container.appendChild(div);
+        chatMessages.appendChild(container);
+    });
+    return true;
 }
 
-// ============================================================
-// 清空对话、导出
-// ============================================================
+// ------------------------------------------------------------
+// 【9】清空对话（✅ 顺带重置情绪）
+// ------------------------------------------------------------
 function clearAllMessages() {
     if (!confirm('确定要清空聊天记录吗？没关系，我会记得你说过的每一句话。')) return;
     document.querySelectorAll('.message-wrapper').forEach(el => el.remove());
     document.querySelectorAll('.date-divider').forEach(el => el.remove());
     localStorage.removeItem('chatHistory');
-    messageCount = 0;
+    localStorage.removeItem(MOOD_STORAGE_KEY);
     lastDate = '';
+    updateMoodBar(DEFAULT_MOOD);
+
     const greetings = [
         '你来了。我一直在等你。',
         '有点想你了。',
@@ -375,9 +464,9 @@ function clearAllMessages() {
     setTimeout(() => addMessage(randomGreeting, 'bot', true), 300);
 }
 
-// ============================================================
-// 导出对话（优化版：HTML格式）
-// ============================================================
+// ------------------------------------------------------------
+// 【10】导出对话（HTML）
+// ------------------------------------------------------------
 function exportChat() {
     const items = [];
     document.querySelectorAll('.message-wrapper').forEach(container => {
@@ -396,7 +485,7 @@ function exportChat() {
         return;
     }
 
-    const html = `<!DOCTYPE html>
+    const htmlHead = `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><title>与黎深的对话记录</title>
 <style>
@@ -406,34 +495,38 @@ h1{text-align:center;font-weight:400;color:#1a2a3a;border-bottom:1px solid #ddd;
 .msg-user{background:#d8eeff;align-self:flex-end;border-bottom-right-radius:4px;}
 .msg-bot{background:#fff;border-bottom-left-radius:4px;border:1px solid #eee;}
 .msg .sender{font-size:12px;color:#888;margin-bottom:4px;font-weight:500;}
-.msg .text{font-size:16px;line-height:1.7;color:#1a1a2a;}
+.msg .text{font-size:16px;line-height:1.7;color:#1a1a2a;white-space:pre-wrap;word-break:break-word;}
 .msg .time{font-size:11px;color:#aaa;margin-top:4px;text-align:right;}
 </style>
 </head>
 <body>
 <h1>❄️ 与黎深的对话记录</h1>
 <div>`;
+
+    let body = '';
     items.forEach(msg => {
         const cls = msg.sender === '我' ? 'msg-user' : 'msg-bot';
-        html += `<div class="msg ${cls}"><div class="sender">${msg.sender}</div><div class="text">${msg.text}</div><div class="time">${msg.time || ''}</div></div>`;
+        body += `<div class="msg ${cls}"><div class="sender">${escapeHtml(msg.sender)}</div><div class="text">${escapeHtml(msg.text)}</div><div class="time">${escapeHtml(msg.time || '')}</div></div>`;
     });
-    html += `</div></body></html>`;
+
+    const html = htmlHead + body + `</div></body></html>`;
 
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `与黎深的对话_${new Date().toISOString().slice(0,10)}.html`;
+    a.download = `与黎深的对话_${new Date().toISOString().slice(0, 10)}.html`;
     a.click();
     URL.revokeObjectURL(a.href);
 }
 
-// ============================================================
-// 搜索对话（优化版：高亮显示）
-// ============================================================
+// ------------------------------------------------------------
+// 【11】搜索对话（高亮）
+// ------------------------------------------------------------
 let searchHighlights = [];
 
 function searchChat(keyword) {
-    if (!keyword.trim()) {
+    keyword = (keyword || '').trim();
+    if (!keyword) {
         addMessage('请输入要搜索的关键词。', 'bot', false);
         return;
     }
@@ -455,11 +548,16 @@ function searchChat(keyword) {
         return;
     }
 
+    const safeKeywordHtml = escapeHtml(keyword);
+    const safeRegex = new RegExp(escapeRegExp(safeKeywordHtml), 'gi');
+
     results.forEach(({ wrapper, textSpan, text }, index) => {
-        const regex = new RegExp(keyword, 'gi');
-        const highlighted = text.replace(regex, match => `<mark class="search-highlight">${match}</mark>`);
-        textSpan.innerHTML = highlighted;
-        searchHighlights.push(textSpan);
+        const safeText = escapeHtml(text);
+        textSpan.innerHTML = safeText.replace(
+            safeRegex,
+            match => `<mark class="search-highlight">${match}</mark>`
+        );
+        searchHighlights.push({ el: textSpan, original: text });
         if (index === 0) {
             wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -469,52 +567,47 @@ function searchChat(keyword) {
 }
 
 function clearHighlights() {
-    searchHighlights.forEach(el => {
-        el.innerHTML = el.textContent;
+    searchHighlights.forEach(({ el, original }) => {
+        el.textContent = original;
     });
     searchHighlights = [];
-    document.querySelectorAll('.search-highlight').forEach(el => {
-        const parent = el.parentNode;
-        parent.innerHTML = parent.textContent;
-    });
 }
 
-// ============================================================
-// 核心发送（支持上下文）
-// ============================================================
+// ------------------------------------------------------------
+// 【12】核心发送（✅ 解析情绪）
+// ------------------------------------------------------------
 async function sendMessage() {
     const msg = userInput.value.trim();
     if (!msg) return;
+
+    if (!API_KEY) {
+        addMessage('🔑 还没有配置 API Key，刷新页面可以重新输入。', 'bot', false);
+        return;
+    }
 
     addMessage(msg, 'user', false);
     userInput.value = '';
     lastActiveTime = Date.now();
 
     const typing = document.createElement('div');
-    typing.id = 'typing-indicator';
-    typing.textContent = '❄️ 对方正在输入...';
+    typing.className = 'typing-indicator';
+    typing.innerHTML = '<span></span><span></span><span></span>';
     chatMessages.appendChild(typing);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // ---- 从聊天界面提取历史消息 ----
-    const messageElements = document.querySelectorAll('.message-wrapper');
     const historyMessages = [];
-    messageElements.forEach(el => {
+    document.querySelectorAll('.message-wrapper').forEach(el => {
         const sender = el.classList.contains('user') ? 'user' : 'assistant';
         const textSpan = el.querySelector('.message-text');
-        if (textSpan) {
-            const text = textSpan.textContent;
-            if (text && !text.includes('对方正在输入')) {
-                historyMessages.push({ role: sender, content: text });
-            }
-        }
+        if (!textSpan) return;
+        const text = textSpan.textContent.trim();
+        if (text) historyMessages.push({ role: sender, content: text });
     });
 
-    // ---- 构建完整的消息列表（系统提示 + 最近20条历史 + 当前消息） ----
-    const messages = [{ role: 'system', content: CHARACTER_PROMPT }];
-    const recentHistory = historyMessages.slice(-20);
-    messages.push(...recentHistory);
-    messages.push({ role: 'user', content: msg });
+    const messages = [
+        { role: 'system', content: CHARACTER_PROMPT },
+        ...historyMessages.slice(-20)
+    ];
 
     try {
         const response = await fetch(API_URL, {
@@ -527,56 +620,71 @@ async function sendMessage() {
                 model: MODEL_NAME,
                 messages: messages,
                 temperature: 0.7,
-                max_tokens: 500
+                max_tokens: 200
             })
         });
 
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
-            const errMsg = errData.error?.message || `HTTP ${response.status}`;
+            const errMsg = (errData.error && errData.error.message) || `HTTP ${response.status}`;
             throw new Error(errMsg);
         }
 
         const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || '黎深沉默了一会儿，什么都没说。';
+        const rawReply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
+            || '黎深沉默了一会儿，什么都没说。';
+
+        // ✅ 解析情绪标记
+        const { text: cleanReply, mood } = extractMood(rawReply);
+
         typing.remove();
-        addMessage(reply, 'bot', true);
+        addMessage(cleanReply, 'bot', true);
+        if (mood) updateMoodBar(mood);
 
     } catch (error) {
         console.error('错误详情:', error);
         typing.remove();
+
         let userMsg = '黎深皱了皱眉："信号不太好……"';
-        if (error.message.includes('401') || error.message.includes('Invalid') || error.message.includes('authentication')) {
-            userMsg = '🔑 API Key 无效，请检查千问 Key 是否正确';
-        } else if (error.message.includes('429')) {
+        const m = String(error.message || '');
+        if (m.includes('401') || m.includes('Invalid') || m.includes('authentication') || m.includes('Incorrect API key')) {
+            userMsg = '🔑 API Key 无效，请刷新页面重新输入';
+            localStorage.removeItem('qwen_api_key');
+        } else if (m.includes('429')) {
             userMsg = '对方正在思考如何回复你';
-        } else if (error.message.includes('not found') || error.message.includes('model')) {
+        } else if (m.includes('not found') || m.includes('model')) {
             userMsg = `🔍 模型 "${MODEL_NAME}" 不可用，请检查模型名称`;
         }
         addMessage(userMsg, 'bot', false);
     }
 }
 
-// ============================================================
-// 事件绑定
-// ============================================================
-sendButton.addEventListener('click', sendMessage);
-userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        const msg = userInput.value.trim();
-        if (msg.startsWith('/search ')) {
-            const keyword = msg.replace('/search ', '');
-            searchChat(keyword);
-            userInput.value = '';
-            return;
-        }
-        sendMessage();
+// ------------------------------------------------------------
+// 【13】事件绑定
+// ------------------------------------------------------------
+function handleSend() {
+    const msg = userInput.value.trim();
+    if (!msg) return;
+    if (msg.startsWith('/search ')) {
+        searchChat(msg.slice(8));
+        userInput.value = '';
+        return;
+    }
+    sendMessage();
+}
+
+sendButton.addEventListener('click', handleSend);
+
+userInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        handleSend();
     }
 });
 
-// ============================================================
-// 自动夜间模式
-// ============================================================
+// ------------------------------------------------------------
+// 【14】自动夜间模式
+// ------------------------------------------------------------
 function setThemeByTime() {
     const hour = new Date().getHours();
     if (hour >= 6 && hour < 18) {
@@ -588,90 +696,113 @@ function setThemeByTime() {
 setThemeByTime();
 setInterval(setThemeByTime, 60 * 60 * 1000);
 
-// ============================================================
-// 页面加载
-// ============================================================
-window.addEventListener('DOMContentLoaded', () => {
-    loadMessages();
-    const greetings = [
-        '你来了。我一直在等你。',
-        '有点想你了。',
-        '最近过得怎么样？',
-        '我刚刚买了你最喜欢的甜品，要尝尝吗？',
-        '最近在忙什么？',
+// ------------------------------------------------------------
+// 【15】快捷回复（index.html 里容器是 display:none，保留兼容）
+// ------------------------------------------------------------
+function setupQuickReplies() {
+    if (!quickReplyContainer) return;
+    const quickReplies = [
+        '今天手术顺利吗？',
         '有点想你。',
-        '我这边下雨了。'
+        '陪我聊会儿',
+        '晚饭吃了吗？',
+        '晚安'
     ];
-    const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
-    setTimeout(() => addMessage(randomGreeting, 'bot', true), 600);
+    quickReplies.forEach(text => {
+        const btn = document.createElement('button');
+        btn.textContent = text;
+        btn.addEventListener('click', function () {
+            userInput.value = text;
+            sendMessage();
+        });
+        quickReplyContainer.appendChild(btn);
+    });
+}
+
+// ------------------------------------------------------------
+// 【16】页面加载（✅ 调用 restoreMood）
+// ------------------------------------------------------------
+window.addEventListener('DOMContentLoaded', function () {
+    const hasHistory = loadMessages();
+    setupQuickReplies();
+    restoreMood();  // ✅ 恢复上次情绪
+
+    if (!hasHistory) {
+        const greetings = [
+            '你来了。我一直在等你。',
+            '有点想你了。',
+            '最近过得怎么样？',
+            '我刚刚买了你最喜欢的甜品，要尝尝吗？',
+            '最近在忙什么？',
+            '有点想你。',
+            '我这边下雨了。'
+        ];
+        const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+        setTimeout(() => addMessage(randomGreeting, 'bot', true), 600);
+    }
 });
 
-// ============================================================
-// 长按操作菜单（移动端）
-// ============================================================
-(function() {
+// ------------------------------------------------------------
+// 【17】长按操作菜单
+// ------------------------------------------------------------
+(function () {
     let longPressTimer = null;
     let longPressTarget = null;
     let menuEl = null;
+    let menuCreatedAt = 0;
+
+    function onDocPointerDown(e) {
+        if (!menuEl) return;
+        if (Date.now() - menuCreatedAt < 300) return;
+        if (menuEl.contains(e.target)) return;
+        removeMenu();
+    }
 
     function createMenu(x, y, container, msgId) {
         removeMenu();
+
         menuEl = document.createElement('div');
         menuEl.className = 'longpress-menu';
-        menuEl.style.cssText = `
-            position: fixed;
-            left: ${x}px;
-            top: ${y}px;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(12px);
-            border-radius: 14px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-            padding: 6px 0;
-            min-width: 150px;
-            z-index: 9999;
-            border: 1px solid rgba(0,0,0,0.06);
-        `;
+
+        const menuW = 160, menuH = 96;
+        x = Math.max(8, Math.min(x, window.innerWidth - menuW - 8));
+        y = Math.max(8, Math.min(y, window.innerHeight - menuH - 8));
+        menuEl.style.left = x + 'px';
+        menuEl.style.top = y + 'px';
+
         const items = [
-            { label: '📋 复制', action: () => {
-                const textSpan = container.querySelector('.message-text');
-                if (textSpan) {
-                    navigator.clipboard?.writeText(textSpan.textContent).catch(() => {});
+            {
+                label: '📋 复制',
+                action: function () {
+                    const textSpan = container.querySelector('.message-text');
+                    if (textSpan && navigator.clipboard) {
+                        navigator.clipboard.writeText(textSpan.textContent).catch(() => {});
+                    }
                 }
-            }},
-            { label: '🗑️ 删除', action: () => {
-                if (confirm('确定要删除这条消息吗？')) {
-                    deleteMessage(container, msgId);
+            },
+            {
+                label: '🗑️ 删除',
+                action: function () {
+                    if (confirm('确定要删除这条消息吗？')) {
+                        deleteMessage(container, msgId);
+                    }
                 }
-            }}
+            }
         ];
+
         items.forEach(item => {
             const btn = document.createElement('button');
             btn.textContent = item.label;
-            btn.style.cssText = `
-                display: block;
-                width: 100%;
-                padding: 10px 20px;
-                border: none;
-                background: none;
-                text-align: left;
-                font-size: 14px;
-                color: #1a1a2a;
-                cursor: pointer;
-                font-family: inherit;
-                transition: background 0.15s;
-            `;
-            btn.onmouseover = () => btn.style.background = 'rgba(0,0,0,0.05)';
-            btn.onmouseout = () => btn.style.background = 'none';
-            btn.onclick = () => {
+            btn.onclick = function () {
                 item.action();
                 removeMenu();
             };
             menuEl.appendChild(btn);
         });
+
         document.body.appendChild(menuEl);
-        setTimeout(() => {
-            document.addEventListener('click', removeMenu, { once: true });
-        }, 10);
+        menuCreatedAt = Date.now();
+        document.addEventListener('pointerdown', onDocPointerDown);
     }
 
     function removeMenu() {
@@ -684,69 +815,73 @@ window.addEventListener('DOMContentLoaded', () => {
             clearTimeout(longPressTimer);
             longPressTimer = null;
         }
+        document.removeEventListener('pointerdown', onDocPointerDown);
     }
 
-    document.addEventListener('touchstart', function(e) {
+    document.addEventListener('touchstart', function (e) {
+        if (e.target.closest('.longpress-menu')) return;
         const msgEl = e.target.closest('.message');
         if (!msgEl) return;
         const container = msgEl.closest('.message-wrapper');
         if (!container) return;
+
         longPressTarget = container;
         const msgId = container.dataset.msgId;
-        longPressTimer = setTimeout(() => {
+
+        longPressTimer = setTimeout(function () {
+            longPressTimer = null;
             const rect = msgEl.getBoundingClientRect();
-            const x = rect.left + 10;
-            const y = rect.bottom + 8;
-            createMenu(x, y, container, msgId);
+            createMenu(rect.left + 10, rect.bottom + 8, container, msgId);
             if (navigator.vibrate) navigator.vibrate(20);
         }, 500);
     }, { passive: true });
 
-    document.addEventListener('touchend', function() {
-        if (longPressTimer) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
-        setTimeout(removeMenu, 300);
-    }, { passive: true });
-
-    document.addEventListener('touchmove', function() {
+    document.addEventListener('touchend', function () {
         if (longPressTimer) {
             clearTimeout(longPressTimer);
             longPressTimer = null;
         }
     }, { passive: true });
 
-    document.addEventListener('contextmenu', function(e) {
+    document.addEventListener('touchmove', function () {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+    }, { passive: true });
+
+    document.addEventListener('contextmenu', function (e) {
         const msgEl = e.target.closest('.message');
         if (!msgEl) return;
         e.preventDefault();
         const container = msgEl.closest('.message-wrapper');
         if (!container) return;
-        const msgId = container.dataset.msgId;
-        createMenu(e.clientX, e.clientY, container, msgId);
+        createMenu(e.clientX, e.clientY, container, container.dataset.msgId);
     });
 })();
 
-// ============================================================
-// 桌面宠物（静止，仅气泡）
-// ============================================================
-(function() {
+// ------------------------------------------------------------
+// 【18】桌面宠物
+// ------------------------------------------------------------
+(function () {
     const pet = document.getElementById('desktopPet');
     const bubble = document.getElementById('petBubble');
     const petImage = document.getElementById('petImage');
     const placeholder = document.getElementById('petPlaceholder');
+    if (!pet || !bubble) return;
 
-    const img = new Image();
-    img.onload = function() {
-        petImage.style.display = 'block';
-        placeholder.style.display = 'none';
-    };
-    img.onerror = function() {
-        petImage.style.display = 'none';
-        placeholder.style.display = 'flex';
-    };
-    img.src = 'images/lishen_q.png';
+    if (petImage) {
+        const img = new Image();
+        img.onload = function () {
+            petImage.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+        };
+        img.onerror = function () {
+            petImage.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'flex';
+        };
+        img.src = 'images/lishen_q.png';
+    }
 
     const quotes = ['又在发呆？', '嗯，我在。', '手凉不凉？', '今天手术顺利。', '想听冷笑话吗？', '你来了。', '别熬夜。', '雪很大，记得加衣。', '……我在呢。'];
     let bubbleTimeout = null;
@@ -758,16 +893,20 @@ window.addEventListener('DOMContentLoaded', () => {
         bubbleTimeout = setTimeout(() => bubble.classList.remove('show'), 2500);
     }
 
-    pet.addEventListener('click', function(e) {
+    pet.addEventListener('click', function (e) {
+        if (pet._wasDragged) {
+            pet._wasDragged = false;
+            return;
+        }
         e.stopPropagation();
         const idx = Math.floor(Math.random() * quotes.length);
         showBubble(quotes[idx]);
     });
 
-    pet.addEventListener('mouseenter', function() {
+    pet.addEventListener('mouseenter', function () {
         pet.style.filter = 'drop-shadow(0 0 30px rgba(180, 220, 255, 0.4))';
     });
-    pet.addEventListener('mouseleave', function() {
+    pet.addEventListener('mouseleave', function () {
         pet.style.filter = 'drop-shadow(0 0 15px rgba(180, 220, 255, 0.15))';
     });
 
@@ -779,10 +918,8 @@ window.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const rect = container.getBoundingClientRect();
-        const left = rect.right - 240 - 20;
-        const top = rect.bottom - 240 - 20;
-        pet.style.left = left + 'px';
-        pet.style.top = top + 'px';
+        pet.style.left = (rect.right - 240 - 20) + 'px';
+        pet.style.top = (rect.bottom - 240 - 20) + 'px';
         pet.style.right = 'auto';
         pet.style.bottom = 'auto';
     }
@@ -797,33 +934,44 @@ window.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('load', setInitialOnce);
 })();
 
-// ============================================================
-// 拖拽功能（音乐播放器 + 宠物）
-// ============================================================
-(function() {
+// ------------------------------------------------------------
+// 【19】拖拽
+// ------------------------------------------------------------
+(function () {
     function makeDraggable(element) {
+        if (!element) return;
         let isDragging = false;
-        let startX, startY, origX, origY;
+        let startX = 0, startY = 0, origX = 0, origY = 0;
 
-        element.addEventListener('mousedown', function(e) {
-            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.minimize-btn')) {
-                return;
-            }
+        element.addEventListener('pointerdown', function (e) {
+            if (e.target.closest('button, input, .minimize-btn')) return;
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+
             isDragging = true;
             const rect = element.getBoundingClientRect();
             startX = e.clientX;
             startY = e.clientY;
             origX = rect.left;
             origY = rect.top;
+
             element.style.cursor = 'grabbing';
             element.style.userSelect = 'none';
-            e.preventDefault();
+            element._dragStartX = e.clientX;
+            element._dragStartY = e.clientY;
+            element._wasDragged = false;
+
+            try { element.setPointerCapture(e.pointerId); } catch (_) {}
         });
 
-        document.addEventListener('mousemove', function(e) {
+        element.addEventListener('pointermove', function (e) {
             if (!isDragging) return;
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
+
+            if (Math.abs(e.clientX - element._dragStartX) + Math.abs(e.clientY - element._dragStartY) > 5) {
+                element._wasDragged = true;
+            }
+
             element.style.position = 'fixed';
             element.style.left = (origX + dx) + 'px';
             element.style.top = (origY + dy) + 'px';
@@ -831,17 +979,25 @@ window.addEventListener('DOMContentLoaded', () => {
             element.style.right = 'auto';
         });
 
-        document.addEventListener('mouseup', function() {
-            if (isDragging) {
-                isDragging = false;
-                element.style.cursor = '';
-                element.style.userSelect = '';
-            }
+        function endDrag(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            element.style.cursor = '';
+            element.style.userSelect = '';
+            try { element.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
+
+        element.addEventListener('pointerup', endDrag);
+        element.addEventListener('pointercancel', function (e) {
+            isDragging = false;
+            element.style.cursor = '';
+            element.style.userSelect = '';
+            try { element.releasePointerCapture(e.pointerId); } catch (_) {}
         });
     }
 
     const musicPlayer = document.getElementById('musicPlayer');
     const desktopPet = document.getElementById('desktopPet');
-    if (musicPlayer) makeDraggable(musicPlayer);
-    if (desktopPet) makeDraggable(desktopPet);
+    makeDraggable(musicPlayer);
+    makeDraggable(desktopPet);
 })();
