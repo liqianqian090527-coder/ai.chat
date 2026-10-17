@@ -458,10 +458,11 @@
         .chat-nav .nav-status {
             font-size: 12px;
             color: #0a1a2e;
-            opacity: 0.6;
+            opacity: 0.75;
             display: flex;
             align-items: center;
             gap: 6px;
+            margin-top: 2px;
         }
         .chat-nav .nav-status .dot {
             display: inline-block;
@@ -470,6 +471,11 @@
             border-radius: 50%;
             background: #43a047;
             flex-shrink: 0;
+            transition: background 0.4s, box-shadow 0.4s;
+        }
+        /* 情绪文字过渡 */
+        #moodText {
+            transition: color 0.4s;
         }
         .chat-nav .nav-menu {
             background: none;
@@ -612,17 +618,38 @@
             transform: scale(1.1);
         }
 
-        #typing-indicator {
-            background: rgba(235, 242, 255, 0.6);
-            backdrop-filter: blur(4px);
-            color: #0a1a2e;
+        /* ✅ 修改：从 #typing-indicator 改为 .typing-indicator，三点跳动动画 */
+        .typing-indicator {
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 4px;
             padding: 14px 20px;
             border-radius: 20px;
             border-bottom-left-radius: 4px;
-            max-width: 76%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-            font-size: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 4px;
             animation: messageSlideIn 0.35s ease-out;
+        }
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: #5a7a9a;
+            border-radius: 50%;
+            animation: typingBounce 1.2s ease-in-out infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes typingBounce {
+            0%, 100% { opacity: 0.3; transform: translateY(0); }
+            50%      { opacity: 1;   transform: translateY(-3px); }
+        }
+        body.night-mode .typing-indicator {
+            background: rgba(30, 50, 80, 0.6);
+        }
+        body.night-mode .typing-indicator span {
+            background: #b0c4de;
         }
 
         .quick-reply-container {
@@ -697,6 +724,7 @@
         }
         body.night-mode .chat-nav .nav-status {
             color: #b0c4de;
+            opacity: 0.85;
         }
         body.night-mode .chat-nav .nav-menu {
             color: #c8d6e5;
@@ -735,10 +763,6 @@
         }
         body.night-mode .chat-input-area button:hover {
             background: #2a4b7c;
-        }
-        body.night-mode #typing-indicator {
-            background: rgba(30, 50, 80, 0.6);
-            color: #e8f0fe;
         }
         body.night-mode .music-player {
             background: rgba(0,0,0,0.4);
@@ -879,13 +903,13 @@
             }
             .chat-nav .nav-name { font-size: 15px; }
             .chat-nav .nav-avatar { width: 34px; height: 34px; }
+            .chat-nav .nav-status { font-size: 11px; }
             .chat-nav .nav-menu { font-size: 16px; padding: 6px 8px; min-width: 36px; min-height: 36px; }
             .chat-nav .nav-menu svg { width: 18px; height: 18px; }
 
             .chat-messages { padding: 12px 14px; gap: 8px; }
             .avatar { width: 36px; height: 36px; font-size: 16px; border-width: 1.5px; }
 
-            /* === 修复消息气泡宽度 === */
             .message {
                 font-size: 14px;
                 padding: 10px 14px;
@@ -913,7 +937,6 @@
             }
             .chat-input-area button svg { width: 14px; height: 14px; }
 
-            /* 手机端音乐小图标 */
             .music-player {
                 position: fixed;
                 top: 12px;
@@ -1008,7 +1031,6 @@
             }
         }
 
-        /* 极小屏适配 */
         @media (max-width: 380px) {
             .chat-nav .nav-name { font-size: 13px; }
             .chat-nav .nav-status { font-size: 10px; }
@@ -1024,7 +1046,6 @@
             .dropdown-menu .menu-item { font-size: 12px; padding: 8px 12px; min-height: 34px; }
         }
 
-        /* ===== 下拉菜单 fixed 定位 ===== */
         .dropdown-menu {
             position: fixed;
             background: rgba(255,255,255,0.95);
@@ -1075,6 +1096,7 @@
 
     <!-- 聊天容器 -->
     <div class="chat-container">
+        <!-- ✅ 修改：nav-status 里加 moodDot + moodText -->
         <div class="chat-nav">
             <div class="nav-avatar">
                 <img src="images/lishen.png" alt="黎深" onerror="this.style.display='none'; this.parentElement.textContent='❄️';">
@@ -1082,7 +1104,8 @@
             <div class="nav-info">
                 <div class="nav-name">黎深</div>
                 <div class="nav-status">
-                    <span class="dot"></span> 在线
+                    <span class="dot" id="moodDot"></span>
+                    <span id="moodText">在线 · 平静</span>
                 </div>
             </div>
             <button class="nav-menu" id="menuBtn" title="菜单">
@@ -1100,7 +1123,7 @@
         </div>
     </div>
 
-    <!-- 下拉菜单（独立于容器） -->
+    <!-- 下拉菜单 -->
     <div class="dropdown-menu" id="dropdownMenu">
         <button class="menu-item" data-action="export"><i class="fas fa-download"></i> 导出对话</button>
         <button class="menu-item" data-action="search"><i class="fas fa-search"></i> 搜索对话</button>
@@ -1154,7 +1177,7 @@
     <script src="script.js"></script>
     <script>
         // ============================================================
-        // 下拉菜单控制（fixed定位，计算按钮位置）
+        // 下拉菜单控制
         // ============================================================
         (function() {
             const menuBtn = document.getElementById('menuBtn');
@@ -1217,7 +1240,7 @@
         })();
 
         // ============================================================
-        // 音乐播放器控制（同步手机和电脑）
+        // 音乐播放器控制
         // ============================================================
         (function() {
             const audio = document.getElementById('bgAudio');
@@ -1324,12 +1347,359 @@
                 el.style.left = Math.random() * 100 + '%';
                 el.style.opacity = 0.3 + Math.random() * 0.4;
                 el.style.animationDuration = 14 + Math.random() * 22 + 's';
-                el.style.animationDelay = Math.random() * 20 + 's';
+                el.style.animationDelay =<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>💙 与他的邂逅</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ===== 基础重置 ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Georgia', 'PingFang SC', serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 4vh;
+            background: url('images/bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            transition: all 0.5s ease;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ===== 聊天容器 ===== */
+        .chat-container {
+            width: 580px;
+            height: 740px;
+            max-width: 94vw;
+            max-height: 85vh;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-radius: 40px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15);
+            position: relative;
+            z-index: 10;
+            transition: all 0.4s ease;
+        }
+
+        /* ===== 音乐播放器 ===== */
+        .music-player {
+            position: fixed; top: 30px; right: 30px; z-index: 999; width: 300px; min-height: 110px;
+            background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-radius: 30px; padding: 18px 20px 16px 20px; border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.2), 0 0 40px rgba(180, 220, 255, 0.12);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); user-select: none; font-family: 'PingFang SC', 'Georgia', serif; cursor: grab;
+        }
+        .music-player:active { cursor: grabbing; }
+        .music-player.minimized { width: 80px; height: 80px; padding: 8px; border-radius: 50%; cursor: pointer; min-height: unset; background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .music-player.minimized .music-body, .music-player.minimized .music-header .track-name, .music-player.minimized .music-header .minimize-btn { display: none; }
+        .music-player.minimized .music-header { padding: 0; border: none; justify-content: center; height: 100%; }
+        .music-player.minimized .record-disc { width: 64px; height: 64px; margin: 0 auto; }
+        .music-player .music-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .music-player .music-header .track-name { color: #0a1a2e; font-size: 14px; font-weight: 500; letter-spacing: 0.8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+        .music-player .music-header .minimize-btn { background: none; border: none; color: #0a1a2e; font-size: 16px; cursor: pointer; transition: 0.3s; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.12); opacity: 0.7; }
+        .music-player .music-header .minimize-btn:hover { background: rgba(255,255,255,0.25); opacity: 1; transform: scale(1.05); }
+        .music-body { display: flex; flex-direction: column; gap: 12px; }
+        .record-container { display: flex; justify-content: center; align-items: center; position: relative; }
+        .record-container::before { content: ''; position: absolute; width: 130px; height: 130px; border-radius: 50%; background: radial-gradient(circle, rgba(180, 220, 255, 0.18) 0%, transparent 70%); pointer-events: none; }
+        .record-disc { width: 100px; height: 100px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #3a4a5a, #1a2a3a); box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 0 30px rgba(255,255,255,0.04); position: relative; animation: spin 10s linear infinite; animation-play-state: paused; flex-shrink: 0; transition: all 0.4s ease; }
+        .record-disc .groove { position: absolute; border-radius: 50%; border: 0.5px solid rgba(255,255,255,0.03); pointer-events: none; }
+        .record-disc .groove.g1 { width: 80%; height: 80%; top: 10%; left: 10%; }
+        .record-disc .groove.g2 { width: 60%; height: 60%; top: 20%; left: 20%; }
+        .record-disc .groove.g3 { width: 40%; height: 40%; top: 30%; left: 30%; }
+        .record-disc .center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #d4e8f5, #a8c4d4); box-shadow: 0 2px 12px rgba(140, 200, 230, 0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; color: #1a3a4a; font-weight: 300; letter-spacing: 1px; border: 1px solid rgba(255,255,255,0.2); }
+        .record-disc .shine { position: absolute; top: 8%; left: 20%; width: 30%; height: 18%; background: radial-gradient(ellipse, rgba(255,255,255,0.12) 0%, transparent 70%); border-radius: 50%; transform: rotate(-25deg); pointer-events: none; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .record-disc.playing { animation-play-state: running; }
+        .music-controls { display: flex; align-items: center; gap: 10px; }
+        .music-controls button { background: none; border: none; color: #0a1a2e; font-size: 18px; cursor: pointer; transition: 0.3s; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.15); flex-shrink: 0; }
+        .music-controls button:hover { background: rgba(255,255,255,0.3); transform: scale(1.06); }
+        .progress-slider { flex: 1; height: 3px; -webkit-appearance: none; appearance: none; background: rgba(26,47,74,0.15); border-radius: 4px; outline: none; }
+        .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #4a8fc1; cursor: pointer; }
+        .time-display { font-size: 12px; color: #0a1a2e; opacity: 0.6; white-space: nowrap; min-width: 70px; text-align: right; font-variant-numeric: tabular-nums; }
+        .volume-control { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+        .volume-control i { color: #0a1a2e; font-size: 13px; opacity: 0.5; }
+        .volume-slider { flex: 1; height: 3px; -webkit-appearance: none; appearance: none; background: rgba(26,47,74,0.12); border-radius: 4px; outline: none; }
+
+        /* ===== 桌面宠物 ===== */
+        .desktop-pet { position: fixed; z-index: 999; width: 240px; height: 240px; border-radius: 50%; cursor: grab; box-shadow: none; background: transparent !important; backdrop-filter: none; border: none; display: flex; align-items: center; justify-content: center; overflow: visible; user-select: none; }
+        .desktop-pet:active { cursor: grabbing; }
+        .desktop-pet img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; background: transparent !important; }
+        .desktop-pet .pet-placeholder { font-size: 100px; color: #0a1a2e; opacity: 0.2; font-weight: 300; }
+        .desktop-pet:hover { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(180, 220, 255, 0.3)); transition: all 0.3s; }
+        .pet-bubble { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-radius: 16px; padding: 10px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 16px; color: #0a1a2e; max-width: 200px; border: 1px solid rgba(255,255,255,0.3); opacity: 0; transition: opacity 0.3s ease; pointer-events: none; font-family: 'PingFang SC', 'Georgia', serif; white-space: nowrap; text-align: center; }
+        .pet-bubble.show { opacity: 1; }
+        .pet-bubble::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid rgba(255,255,255,0.85); }
+
+        /* ===== 聊天区 ===== */
+        .date-divider { text-align: center; font-size: 12px; color: rgba(10, 26, 46, 0.4); padding: 12px 0 8px 0; letter-spacing: 1px; font-weight: 300; width: 100%; }
+        .message.pop-in { animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.85) translateY(12px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        .search-highlight { background: #fbbf24; color: #0a1a2e; padding: 0 2px; border-radius: 3px; font-weight: 500; }
+        
+        .chat-nav { display: flex; align-items: center; padding: 14px 20px 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); backdrop-filter: blur(8px); flex-shrink: 0; gap: 12px; }
+        .chat-nav .nav-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.6); flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #0a1a2e; }
+        .chat-nav .nav-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .chat-nav .nav-info { flex: 1; min-width: 0; }
+        .chat-nav .nav-name { font-size: 17px; font-weight: 500; color: #0a1a2e; letter-spacing: 0.5px; }
+        .chat-nav .nav-status { font-size: 12px; color: #0a1a2e; opacity: 0.75; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+        .chat-nav .nav-status .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #43a047; flex-shrink: 0; transition: background 0.4s, box-shadow 0.4s; }
+        #moodText { transition: color 0.4s; }
+        .chat-nav .nav-menu { background: none; border: none; color: #0a1a2e; font-size: 18px; cursor: pointer; opacity: 0.5; padding: 4px 8px; transition: opacity 0.2s; }
+        .chat-nav .nav-menu:hover { opacity: 0.8; }
+
+        .chat-messages { flex: 1; padding: 16px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; min-height: 0; }
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: rgba(44, 62, 80, 0.2); border-radius: 10px; }
+
+        .message-wrapper { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 4px; animation: messageSlideIn 0.35s ease-out; }
+        @keyframes messageSlideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message-wrapper.user { justify-content: flex-end; }
+        .message-wrapper.user .avatar { order: 1; }
+
+        .avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #0a1a2e; border: 2px solid rgba(255,255,255,0.6); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+
+        .message { padding: 14px 20px; border-radius: 20px; max-width: 76%; word-wrap: break-word; box-shadow: 0 1px 8px rgba(0,0,0,0.04); line-height: 1.6; font-size: 16px; letter-spacing: 0.2px; transition: all 0.2s ease; position: relative; }
+        .message.user { background: linear-gradient(135deg, #d8eeff 0%, #a4c9f0 45%, #c3e2f8 100%); color: #0a1a2e; border-bottom-right-radius: 4px; box-shadow: 0 2px 12px rgba(59,130,246,0.18); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.35); }
+        .message.bot { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px); color: #0a1a2e; border-bottom-left-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.5); }
+        .message .time { font-size: 10px; opacity: 0.35; margin-left: 8px; display: inline-block; vertical-align: bottom; font-weight: 300; color: #0a1a2e; }
+
+        .delete-btn { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; border-radius: 50%; background: rgba(200, 80, 80, 0.85); color: white; font-size: 10px; font-weight: bold; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: 0.2s; line-height: 1; user-select: none; }
+        .message:hover .delete-btn { display: flex; }
+        .delete-btn:hover { background: rgba(220, 60, 60, 1); transform: scale(1.1); }
+
+        /* ✅ 修复打字动画：类选择器 */
+        .typing-indicator { align-self: flex-start; display: flex; align-items: center; gap: 4px; padding: 14px 20px; border-radius: 20px; border-bottom-left-radius: 4px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 4px; animation: messageSlideIn 0.35s ease-out; }
+        .typing-indicator span { width: 6px; height: 6px; background: #5a7a9a; border-radius: 50%; animation: typingBounce 1.2s ease-in-out infinite; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes typingBounce { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+        body.night-mode .typing-indicator { background: rgba(30, 50, 80, 0.6); }
+        body.night-mode .typing-indicator span { background: #b0c4de; }
+
+        .chat-input-area { display: flex; padding: 10px 16px 14px 16px; background: rgba(255,255,255,0.04); backdrop-filter: blur(8px); border-top: 1px solid rgba(255,255,255,0.06); gap: 10px; align-items: center; flex-shrink: 0; }
+        .chat-input-area input { flex: 1; padding: 10px 18px; border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; background: rgba(255,255,255,0.25); backdrop-filter: blur(4px); outline: none; font-size: 15px; color: #0a1a2e; transition: all 0.3s ease; min-height: 44px; }
+        .chat-input-area input:focus { border-color: #3b82f6; background: rgba(255,255,255,0.45); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .chat-input-area input::placeholder { color: #5a7a9a; opacity: 0.5; }
+        .chat-input-area button { padding: 10px 22px; background: #3b82f6; color: white; border: none; border-radius: 24px; font-size: 15px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(59,130,246,0.3); font-weight: 500; letter-spacing: 0.3px; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 44px; }
+        .chat-input-area button:hover { background: #2563eb; transform: scale(1.02); }
+        .chat-input-area button:active { transform: scale(0.96); }
+        .chat-input-area button svg { width: 16px; height: 16px; }
+
+        /* ===== 夜间模式 ===== */
+        body.night-mode .chat-container { background: rgba(0, 0, 0, 0.65); border-color: rgba(255,255,255,0.08); }
+        body.night-mode .chat-nav .nav-name { color: #e8f0fe; }
+        body.night-mode .chat-nav .nav-status { color: #b0c4de; opacity: 0.85; }
+        body.night-mode .chat-nav .nav-menu { color: #c8d6e5; }
+        body.night-mode .chat-nav { border-bottom-color: rgba(255,255,255,0.08); }
+        body.night-mode .message.user { background: linear-gradient(135deg, #2a4a7a 0%, #1a3560 45%, #254578 100%); color: #eef6ff; border-color: rgba(160,200,255,0.2); }
+        body.night-mode .message.bot { background: rgba(255, 255, 255, 0.92); color: #0a1a2e; border-color: rgba(255,255,255,0.5); }
+        body.night-mode .message .time { color: #b0c4de; opacity: 0.5; }
+        body.night-mode .chat-input-area input { background: rgba(255,255,255,0.08); color: #e8f0fe; border-color: rgba(255,255,255,0.1); }
+        body.night-mode .chat-input-area input::placeholder { color: #8395a7; }
+        body.night-mode .chat-input-area button { background: #1e3a5f; }
+        body.night-mode .music-player { background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.08); }
+        body.night-mode .music-player .music-header .track-name,
+        body.night-mode .music-player .music-header .minimize-btn,
+        body.night-mode .music-controls button,
+        body.night-mode .time-display,
+        body.night-mode .volume-control i { color: #c8d6e5; }
+        body.night-mode .pet-bubble { background: rgba(30,40,60,0.9); color: #e8f0fe; border-color: rgba(255,255,255,0.1); }
+        body.night-mode .pet-bubble::after { border-top-color: rgba(30,40,60,0.9); }
+
+        /* ===== 冰雪特效 ===== */
+        .snow-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 998; overflow: hidden; }
+        .snow-layer .flake { position: absolute; top: -30px; color: rgba(235, 246, 255, 0.85); filter: drop-shadow(0 0 4px rgba(200, 235, 255, 0.6)); animation: snowFall linear infinite; will-change: transform, opacity; }
+        @keyframes snowFall { 0% { transform: translateY(-6vh) translateX(0) rotate(0deg); opacity: 0; } 8% { opacity: 1; } 50% { transform: translateY(50vh) translateX(4vw) rotate(180deg); } 92% { opacity: 1; } 100% { transform: translateY(106vh) translateX(-2vw) rotate(360deg); opacity: 0; } }
+        .aurora-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 60vh; pointer-events: none; z-index: 1; opacity: 0; transition: opacity 2s ease; }
+        .aurora-layer.show { opacity: 1; }
+        .aurora-band { position: absolute; top: -10%; left: -20%; width: 140%; height: 65%; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; }
+
+        /* ===== 下拉菜单 ===== */
+        .dropdown-menu { position: fixed; background: rgba(255,255,255,0.95); backdrop-filter: blur(16px); border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.15); padding: 8px 0; min-width: 160px; z-index: 999999; display: none; border: 1px solid rgba(255,255,255,0.2); }
+        .dropdown-menu.show { display: block; }
+        .dropdown-menu .menu-item { padding: 10px 20px; font-size: 14px; color: #0a1a2e; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
+        .dropdown-menu .menu-item:hover { background: rgba(0,0,0,0.05); }
+        .dropdown-menu .menu-item i { width: 18px; color: #5a7a9a; }
+        .dropdown-menu .menu-divider { height: 1px; background: rgba(0,0,0,0.06); margin: 4px 12px; }
+
+        /* ===== 移动端 ===== */
+        @media (max-width: 640px) {
+            body { padding-top: 0; align-items: stretch; }
+            .chat-container { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; max-width: 100vw; padding: 0; }
+            .chat-nav { padding: 10px 14px 8px 14px; gap: 10px; }
+            .chat-nav .nav-name { font-size: 15px; }
+            .chat-nav .nav-avatar { width: 34px; height: 34px; }
+            .chat-nav .nav-menu { font-size: 16px; padding: 6px 8px; min-width: 36px; min-height: 36px; }
+            .chat-messages { padding: 12px 14px; gap: 8px; }
+            .avatar { width: 36px; height: 36px; font-size: 16px; border-width: 1.5px; }
+            .message { font-size: 14px; padding: 10px 14px; max-width: 82% !important; }
+            .chat-input-area { padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 12px)) 12px; gap: 8px; }
+            .chat-input-area input { font-size: 14px; padding: 8px 14px; min-height: 38px; }
+            .chat-input-area button { font-size: 14px; padding: 8px 14px; min-height: 38px; }
+            .music-player { position: fixed; top: 12px; right: 12px; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+            .music-player .music-header, .music-player .music-body { display: none !important; }
+            .desktop-pet { width: 70px; height: 70px; bottom: 110px !important; left: 10px !important; top: auto !important; right: auto !important; z-index: 998; }
+        }
+        .mobile-music-icon { display: none; }
+        @media (max-width: 640px) { .mobile-music-icon { display: flex !important; font-size: 18px; color: #0a1a2e; width: 100%; height: 100%; align-items: center; justify-content: center; } }
+    </style>
+</head>
+<body>
+
+    <div class="aurora-layer" id="auroraLayer">
+        <div class="aurora-band a1"></div>
+        <div class="aurora-band a2"></div>
+    </div>
+    <div class="snow-layer" id="snowLayer"></div>
+
+    <div class="chat-container">
+        <div class="chat-nav">
+            <div class="nav-avatar">
+                <img src="images/lishen.png" alt="黎深" onerror="this.style.display='none'; this.parentElement.textContent='❄️';">
+            </div>
+            <div class="nav-info">
+                <div class="nav-name">黎深</div>
+                <!-- ✅ 情绪状态栏挂载点 -->
+                <div class="nav-status">
+                    <span class="dot" id="moodDot"></span>
+                    <span id="moodText">在线 · 平静</span>
+                </div>
+            </div>
+            <button class="nav-menu" id="menuBtn" title="菜单">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2L19 8L12 22L5 8Z"/><path d="M5 8h14M12 2L9 8l3 14M12 2l3 6-3 14"/></svg>
+            </button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="输入你想说的话..." autocomplete="off">
+            <button id="sendButton" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M12 2.5v19M12 5l-2 2M12 5l2 2M12 10l-1.7 1.7M12 10l1.7 1.7M12 14l-1.7-1.7M12 14l1.7-1.7M12 19l-2-2M12 19l2-2"/></svg> 发送
+            </button>
+        </div>
+    </div>
+
+    <div class="dropdown-menu" id="dropdownMenu">
+        <button class="menu-item" data-action="export"><i class="fas fa-download"></i> 导出对话</button>
+        <button class="menu-item" data-action="search"><i class="fas fa-search"></i> 搜索对话</button>
+        <button class="menu-item" data-action="clear"><i class="fas fa-trash-alt"></i> 清空对话</button>
+        <div class="menu-divider"></div>
+        <button class="menu-item" data-action="toggle-theme"><i class="fas fa-moon"></i> 切换夜间模式</button>
+    </div>
+
+    <div class="music-player" id="musicPlayer">
+        <span class="mobile-music-icon" id="mobileMusicToggle"><i class="fas fa-play"></i></span>
+        <div class="music-header">
+            <span class="track-name" id="trackName">🎵 你的音乐</span>
+            <button class="minimize-btn" id="musicMinimize" title="最小化"><i class="fas fa-minus"></i></button>
+        </div>
+        <div class="music-body" id="musicBody">
+            <div class="record-container" id="recordContainer">
+                <div class="record-disc" id="recordDisc">
+                    <div class="groove g1"></div><div class="groove g2"></div><div class="groove g3"></div>
+                    <div class="center-label">♪</div><div class="shine"></div>
+                </div>
+            </div>
+            <div class="music-controls">
+                <button id="musicToggle"><i class="fas fa-play"></i></button>
+                <input type="range" class="progress-slider" id="progressSlider" min="0" max="1" step="0.001" value="0">
+                <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
+            </div>
+            <div class="volume-control">
+                <i class="fas fa-volume-up"></i>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="0.3">
+            </div>
+        </div>
+    </div>
+
+    <div class="desktop-pet" id="desktopPet">
+        <img src="images/lishen_q.png" alt="黎深Q版" id="petImage" style="display:none;" onerror="this.style.display='none'; document.getElementById('petPlaceholder').style.display='flex';">
+        <div class="pet-placeholder" id="petPlaceholder">黎</div>
+        <div class="pet-bubble" id="petBubble"></div>
+    </div>
+
+    <audio id="bgAudio" src="images/bg-music.mp3" loop preload="auto"></audio>
+
+    <script src="script.js"></script>
+    <script>
+        // 下拉菜单与音乐控制逻辑
+        (function() {
+            const menuBtn = document.getElementById('menuBtn');
+            const dropdown = document.getElementById('dropdownMenu');
+            if (menuBtn && dropdown) {
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const rect = this.getBoundingClientRect();
+                    let left = rect.left + rect.width - 160;
+                    if (left < 10) left = 10;
+                    dropdown.style.left = left + 'px';
+                    dropdown.style.top = (rect.bottom + 6) + 'px';
+                    dropdown.classList.toggle('show');
+                });
+                document.addEventListener('click', function(e) {
+                    if (!dropdown.contains(e.target) && e.target !== menuBtn) dropdown.classList.remove('show');
+                });
+                dropdown.querySelectorAll('.menu-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const action = this.dataset.action;
+                        dropdown.classList.remove('show');
+                        if (action === 'export' && typeof exportChat === 'function') exportChat();
+                        if (action === 'search') { const input = document.getElementById('userInput'); if (input) { input.value = '/search '; input.focus(); } }
+                        if (action === 'clear' && typeof clearAllMessages === 'function') {
+                            if (confirm('确定要清空聊天记录吗？没关系，我会记得你说过的每一句话。')) clearAllMessages();
+                        }
+                        if (action === 'toggle-theme') {
+                            document.body.classList.toggle('night-mode');
+                            const isNight = document.body.classList.contains('night-mode');
+                            this.innerHTML = isNight ? '<i class="fas fa-sun"></i> 切换日间模式' : '<i class="fas fa-moon"></i> 切换夜间模式';
+                        }
+                    });
+                });
+            }
+
+            const audio = document.getElementById('bgAudio');
+            const desktopToggle = document.getElementById('musicToggle');
+            const mobileToggle = document.getElementById('mobileMusicToggle');
+            const recordDisc = document.getElementById('recordDisc');
+            let isPlaying = false;
+            function togglePlay() {
+                if (audio.paused) { audio.play().then(() => { isPlaying = true; recordDisc.classList.add('playing'); if(desktopToggle) desktopToggle.innerHTML = '<i class="fas fa-pause"></i>'; if(mobileToggle) mobileToggle.innerHTML = '<i class="fas fa-pause"></i>'; }).catch(()=>{}); }
+                else { audio.pause(); isPlaying = false; recordDisc.classList.remove('playing'); if(desktopToggle) desktopToggle.innerHTML = '<i class="fas fa-play"></i>'; if(mobileToggle) mobileToggle.innerHTML = '<i class="fas fa-play"></i>'; }
+            }
+            if (desktopToggle) desktopToggle.addEventListener('click', togglePlay);
+            if (mobileToggle) mobileToggle.addEventListener('click', togglePlay);
+
+            const layer = document.getElementById('snowLayer');
+            if (layer) {
+                for (let i = 0; i < (window.innerWidth < 640 ? 40 : 80); i++) {
+                    const el = document.createElement('span'); el.className = 'flake'; el.textContent = ['❄', '❅', '❆', '✦'][Math.floor(Math.random() * 4)];
+                    el.style.fontSize = (8 + Math.random() * 16) + 'px'; el.style.left = Math.random() * 100 + '%';
+                    el.style.animationDuration = (14 + Math.random() * 22) + 's'; el.style.animationDelay = Math.random() * 20 + 's';
+                    layer.appendChild(el);
+                }
+            }
+            setTimeout(() => { const a = document.getElementById('auroraLayer'); if(a) a.classList.add('show'); }, 800);
+        })();
+    </script>
+</body>
+</html> Math.random() * 20 + 's';
                 layer.appendChild(el);
             }
         })();
 
-        // 极光渐入
         (function() {
             const aurora = document.getElementById('auroraLayer');
             if (!aurora) return;
