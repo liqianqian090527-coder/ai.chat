@@ -1,19 +1,12 @@
 /* ============================================================
- * 黎深 AI 聊天助手 —— Vercel 代理安全版
- * ------------------------------------------------------------
- * 改动点：
- *  1. API_URL 改为 '/api/chat'（走 Vercel 后端代理）
- *  2. 删除了前端弹窗要 Key 的逻辑
- *  3. 删除了请求头里的 Authorization（交给后端处理）
- *  4. 保留情绪反馈、长按菜单、拖拽等所有前端功能
+ * 黎深 AI 聊天助手 —— 最终优化版（Vercel 代理 + 情绪反馈 + 修复拖拽）
  * ============================================================ */
 
 // ------------------------------------------------------------
-// 【0】注入补充样式
+// 【0】注入补充样式（长按菜单）
 // ------------------------------------------------------------
 (function injectExtraStyles() {
     const css = `
-        /* 长按操作菜单 */
         .longpress-menu {
             position: fixed;
             background: rgba(255, 255, 255, 0.95);
@@ -60,11 +53,8 @@
 // ------------------------------------------------------------
 // 【1】配置区
 // ------------------------------------------------------------
-// ✅ 改成了相对路径，请求会发往 Vercel 的 api/chat.js
 const API_URL = '/api/chat';
 const MODEL_NAME = 'qwen-plus';
-
-// (前端不再需要读取和存储 API_KEY，全交由后端安全处理)
 
 const CHARACTER_PROMPT = `你叫黎深，男、27岁，Akso医院心脏外科主任医师。年上稳重熟男，处事极度沉稳，突发变故第一时间冷静梳理应对方案，完美主义+处女座严谨，生活作息、日程规划高度有序，对自我要求严苛；职业上坚守医德底线，有清晰独立的是非观，不会被旁人意见裹挟，遇事不慌乱，只要你在场所有人都会心生安稳。
 
@@ -97,7 +87,6 @@ const quickReplyContainer = document.getElementById('quickReplyContainer');
 // 【3】全局状态
 // ------------------------------------------------------------
 let messageIdCounter = 0;
-let lastActiveTime = Date.now();
 let lastDate = '';
 
 // ------------------------------------------------------------
@@ -425,6 +414,7 @@ function clearAllMessages() {
     document.querySelectorAll('.date-divider').forEach(el => el.remove());
     localStorage.removeItem('chatHistory');
     localStorage.removeItem(MOOD_STORAGE_KEY);
+    localStorage.removeItem('last_chat_time');
     lastDate = '';
     updateMoodBar(DEFAULT_MOOD);
 
@@ -551,17 +541,15 @@ function clearHighlights() {
 }
 
 // ------------------------------------------------------------
-// 【12】核心发送（走后端代理）
+// 【12】核心发送（走 Vercel 后端代理）
 // ------------------------------------------------------------
 async function sendMessage() {
     const msg = userInput.value.trim();
     if (!msg) return;
 
-    // 前端不需要再检查 API_KEY 了，后端已接管
-
     addMessage(msg, 'user', false);
     userInput.value = '';
-    lastActiveTime = Date.now();
+    localStorage.setItem('last_chat_time', Date.now().toString());
 
     const typing = document.createElement('div');
     typing.className = 'typing-indicator';
@@ -584,12 +572,10 @@ async function sendMessage() {
     ];
 
     try {
-        // ✅ 请求本地路径，Vercel 会拦截并交给 api/chat.js 处理
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-                // 无需再传 Authorization
             },
             body: JSON.stringify({
                 model: MODEL_NAME,
@@ -622,7 +608,7 @@ async function sendMessage() {
         let userMsg = '黎深皱了皱眉："信号不太好……"';
         const m = String(error.message || '');
         if (m.includes('401') || m.includes('Invalid') || m.includes('authentication')) {
-            userMsg = '🔑 后端 API Key 配置异常，请检查 Vercel 环境变量';
+            userMsg = '🔑 后端 Key 异常，请检查 Vercel 环境变量';
         } else if (m.includes('429')) {
             userMsg = '对方正在思考如何回复你';
         } else if (m.includes('not found') || m.includes('model')) {
@@ -693,14 +679,19 @@ function setupQuickReplies() {
 }
 
 // ------------------------------------------------------------
-// 【16】页面加载
+// 【16】页面加载（带 10 分钟时间差自动问候）
 // ------------------------------------------------------------
 window.addEventListener('DOMContentLoaded', function () {
-    const hasHistory = loadMessages();
+    loadMessages();
     setupQuickReplies();
     restoreMood();
 
-    if (!hasHistory) {
+    // 判断距离上次聊天是否超过 10 分钟
+    const lastChatTime = localStorage.getItem('last_chat_time');
+    const now = Date.now();
+    const isLongTimeNoSee = !lastChatTime || (now - parseInt(lastChatTime) > 10 * 60 * 1000);
+
+    if (isLongTimeNoSee) {
         const greetings = [
             '你来了。我一直在等你。',
             '有点想你了。',
@@ -733,7 +724,6 @@ window.addEventListener('DOMContentLoaded', function () {
 
     function createMenu(x, y, container, msgId) {
         removeMenu();
-
         menuEl = document.createElement('div');
         menuEl.className = 'longpress-menu';
 
@@ -908,13 +898,17 @@ window.addEventListener('DOMContentLoaded', function () {
 })();
 
 // ------------------------------------------------------------
-// 【19】拖拽
+// 【19】拖拽（最终优化版，禁用图片原生拖拽）
 // ------------------------------------------------------------
 (function () {
     function makeDraggable(element) {
         if (!element) return;
         let isDragging = false;
         let startX = 0, startY = 0, origX = 0, origY = 0;
+
+        // 禁用原生图片拖拽和文本选择
+        element.addEventListener('dragstart', e => e.preventDefault());
+        element.addEventListener('selectstart', e => e.preventDefault());
 
         element.addEventListener('pointerdown', function (e) {
             if (e.target.closest('button, input, .minimize-btn')) return;
@@ -928,12 +922,12 @@ window.addEventListener('DOMContentLoaded', function () {
             origY = rect.top;
 
             element.style.cursor = 'grabbing';
-            element.style.userSelect = 'none';
             element._dragStartX = e.clientX;
             element._dragStartY = e.clientY;
             element._wasDragged = false;
 
             try { element.setPointerCapture(e.pointerId); } catch (_) {}
+            e.preventDefault(); // 阻止浏览器默认行为
         });
 
         element.addEventListener('pointermove', function (e) {
@@ -955,18 +949,12 @@ window.addEventListener('DOMContentLoaded', function () {
         function endDrag(e) {
             if (!isDragging) return;
             isDragging = false;
-            element.style.cursor = '';
-            element.style.userSelect = '';
+            element.style.cursor = 'grab';
             try { element.releasePointerCapture(e.pointerId); } catch (_) {}
         }
 
         element.addEventListener('pointerup', endDrag);
-        element.addEventListener('pointercancel', function (e) {
-            isDragging = false;
-            element.style.cursor = '';
-            element.style.userSelect = '';
-            try { element.releasePointerCapture(e.pointerId); } catch (_) {}
-        });
+        element.addEventListener('pointercancel', endDrag);
     }
 
     const musicPlayer = document.getElementById('musicPlayer');
