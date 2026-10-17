@@ -1,27 +1,19 @@
 /* ============================================================
- * 黎深 AI 聊天助手 —— 修复优化版（含情绪反馈系统）
+ * 黎深 AI 聊天助手 —— Vercel 代理安全版
  * ------------------------------------------------------------
- * 本次改动：
- *   A. injectExtraStyles 精简：删除会覆盖 index.html 的 #desktopPet /
- *      #petImage / #petPlaceholder / #petBubble 等 id 样式
- *      （原来它们把 HTML 里 .desktop-pet 的 240px 覆盖成 200px）
- *   B. CHARACTER_PROMPT 末尾追加情绪标记输出协议
- *   C. 新增情绪反馈系统：MOOD_MAP / extractMood / updateMoodBar / restoreMood
- *   D. sendMessage 里解析情绪，正文剥离 [mood:xxx]，更新顶部状态栏
- *   E. max_tokens 150 → 200（腾出情绪标记的空间）
- *   F. DOMContentLoaded 里调用 restoreMood()
- *   G. clearAllMessages 里重置情绪为「平静」
+ * 改动点：
+ *  1. API_URL 改为 '/api/chat'（走 Vercel 后端代理）
+ *  2. 删除了前端弹窗要 Key 的逻辑
+ *  3. 删除了请求头里的 Authorization（交给后端处理）
+ *  4. 保留情绪反馈、长按菜单、拖拽等所有前端功能
  * ============================================================ */
 
 // ------------------------------------------------------------
-// 【0】注入补充样式 —— 只保留 index.html 里没有的 longpress-menu 基础样式
-//     ⚠️ 上一版这里写了 #desktopPet / #petImage / #petPlaceholder / #petBubble，
-//        会覆盖 index.html 里 .desktop-pet 等的样式（id 优先级 > class），
-//        导致桌面宠物尺寸变小、placeholder 不显示等 bug。已全部移除。
+// 【0】注入补充样式
 // ------------------------------------------------------------
 (function injectExtraStyles() {
     const css = `
-        /* 长按操作菜单：index.html 里只有 animation/font-family，基础样式靠这里 */
+        /* 长按操作菜单 */
         .longpress-menu {
             position: fixed;
             background: rgba(255, 255, 255, 0.95);
@@ -68,18 +60,11 @@
 // ------------------------------------------------------------
 // 【1】配置区
 // ------------------------------------------------------------
-const API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+// ✅ 改成了相对路径，请求会发往 Vercel 的 api/chat.js
+const API_URL = '/api/chat';
 const MODEL_NAME = 'qwen-plus';
 
-// ⚠️ API Key：优先从 localStorage 读，没有就弹窗让用户输入
-let API_KEY = (localStorage.getItem('qwen_api_key') || '').trim();
-if (!API_KEY) {
-    const input = prompt('请输入你的通义千问 API Key（仅保存在当前浏览器，不会上传）：');
-    if (input && input.trim()) {
-        API_KEY = input.trim();
-        localStorage.setItem('qwen_api_key', API_KEY);
-    }
-}
+// (前端不再需要读取和存储 API_KEY，全交由后端安全处理)
 
 const CHARACTER_PROMPT = `你叫黎深，男、27岁，Akso医院心脏外科主任医师。年上稳重熟男，处事极度沉稳，突发变故第一时间冷静梳理应对方案，完美主义+处女座严谨，生活作息、日程规划高度有序，对自我要求严苛；职业上坚守医德底线，有清晰独立的是非观，不会被旁人意见裹挟，遇事不慌乱，只要你在场所有人都会心生安稳。
 
@@ -129,8 +114,6 @@ const MOOD_MAP = {
 const DEFAULT_MOOD = '平静';
 const MOOD_STORAGE_KEY = 'lishen_last_mood';
 
-// 从模型回复里抽出 [mood:xxx]，返回干净正文 + 情绪词
-// 兼容中文冒号、多余空格、大小写
 function extractMood(raw) {
     if (!raw) return { text: '', mood: null };
     const m = raw.match(/\[mood\s*[:：]\s*([^\]]+?)\s*\]/i);
@@ -140,7 +123,6 @@ function extractMood(raw) {
     return { text, mood: MOOD_MAP[moodRaw] ? moodRaw : null };
 }
 
-// 更新顶部状态栏的圆点和文字
 function updateMoodBar(mood) {
     const dot = document.getElementById('moodDot');
     const txt = document.getElementById('moodText');
@@ -157,7 +139,6 @@ function updateMoodBar(mood) {
     localStorage.setItem(MOOD_STORAGE_KEY, finalMood);
 }
 
-// 页面加载时恢复上次情绪
 function restoreMood() {
     const last = localStorage.getItem(MOOD_STORAGE_KEY);
     updateMoodBar(last || DEFAULT_MOOD);
@@ -180,11 +161,7 @@ function formatDate(date) {
 
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, c => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
 }
 
@@ -440,7 +417,7 @@ function loadMessages() {
 }
 
 // ------------------------------------------------------------
-// 【9】清空对话（✅ 顺带重置情绪）
+// 【9】清空对话
 // ------------------------------------------------------------
 function clearAllMessages() {
     if (!confirm('确定要清空聊天记录吗？没关系，我会记得你说过的每一句话。')) return;
@@ -574,16 +551,13 @@ function clearHighlights() {
 }
 
 // ------------------------------------------------------------
-// 【12】核心发送（✅ 解析情绪）
+// 【12】核心发送（走后端代理）
 // ------------------------------------------------------------
 async function sendMessage() {
     const msg = userInput.value.trim();
     if (!msg) return;
 
-    if (!API_KEY) {
-        addMessage('🔑 还没有配置 API Key，刷新页面可以重新输入。', 'bot', false);
-        return;
-    }
+    // 前端不需要再检查 API_KEY 了，后端已接管
 
     addMessage(msg, 'user', false);
     userInput.value = '';
@@ -610,11 +584,12 @@ async function sendMessage() {
     ];
 
     try {
+        // ✅ 请求本地路径，Vercel 会拦截并交给 api/chat.js 处理
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`
+                'Content-Type': 'application/json'
+                // 无需再传 Authorization
             },
             body: JSON.stringify({
                 model: MODEL_NAME,
@@ -626,7 +601,7 @@ async function sendMessage() {
 
         if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
-            const errMsg = (errData.error && errData.error.message) || `HTTP ${response.status}`;
+            const errMsg = (errData.error && errData.error.message) || (errData.error) || `HTTP ${response.status}`;
             throw new Error(errMsg);
         }
 
@@ -634,7 +609,6 @@ async function sendMessage() {
         const rawReply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
             || '黎深沉默了一会儿，什么都没说。';
 
-        // ✅ 解析情绪标记
         const { text: cleanReply, mood } = extractMood(rawReply);
 
         typing.remove();
@@ -647,9 +621,8 @@ async function sendMessage() {
 
         let userMsg = '黎深皱了皱眉："信号不太好……"';
         const m = String(error.message || '');
-        if (m.includes('401') || m.includes('Invalid') || m.includes('authentication') || m.includes('Incorrect API key')) {
-            userMsg = '🔑 API Key 无效，请刷新页面重新输入';
-            localStorage.removeItem('qwen_api_key');
+        if (m.includes('401') || m.includes('Invalid') || m.includes('authentication')) {
+            userMsg = '🔑 后端 API Key 配置异常，请检查 Vercel 环境变量';
         } else if (m.includes('429')) {
             userMsg = '对方正在思考如何回复你';
         } else if (m.includes('not found') || m.includes('model')) {
@@ -697,7 +670,7 @@ setThemeByTime();
 setInterval(setThemeByTime, 60 * 60 * 1000);
 
 // ------------------------------------------------------------
-// 【15】快捷回复（index.html 里容器是 display:none，保留兼容）
+// 【15】快捷回复
 // ------------------------------------------------------------
 function setupQuickReplies() {
     if (!quickReplyContainer) return;
@@ -720,12 +693,12 @@ function setupQuickReplies() {
 }
 
 // ------------------------------------------------------------
-// 【16】页面加载（✅ 调用 restoreMood）
+// 【16】页面加载
 // ------------------------------------------------------------
 window.addEventListener('DOMContentLoaded', function () {
     const hasHistory = loadMessages();
     setupQuickReplies();
-    restoreMood();  // ✅ 恢复上次情绪
+    restoreMood();
 
     if (!hasHistory) {
         const greetings = [
