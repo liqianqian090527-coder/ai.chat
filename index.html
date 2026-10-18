@@ -169,15 +169,12 @@
         .wx-action-btn { background: #f7f7f7; border: none; padding: 4px 10px; border-radius: 4px; font-size: 13px; color: var(--wx-name); cursor: pointer; display: flex; align-items: center; gap: 4px;}
         .wx-action-btn i { font-size: 12px; }
 
-        /* 点赞区域 */
         .wx-likes-box { background: var(--wx-comment-bg); border-radius: 4px; padding: 8px 12px; font-size: 14px; margin-top: 4px; border-bottom: 1px solid #e5e5e5; }
         .wx-likes-box i { color: var(--wx-name); margin-right: 6px; font-size: 12px; }
         .wx-like-user { color: var(--wx-name); font-weight: 600; cursor: pointer; margin-right: 6px; }
         
-        /* 评论区 */
         .wx-comments-box { background: var(--wx-comment-bg); border-radius: 4px; padding: 8px 12px; font-size: 14px; display: none; position: relative; margin-top: 0; border-top: 1px solid #e5e5e5; }
         .wx-comments-box.show { display: block; }
-        .wx-comments-box::before { content: ''; position: absolute; top: -6px; right: 20px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 6px solid var(--wx-comment-bg); display: none;}
         .wx-comment-item { padding: 3px 0; line-height: 1.4; word-wrap: break-word; }
         .wx-comment-user { color: var(--wx-name); font-weight: 600; cursor: pointer; }
         .wx-comment-typing { color: #999; font-style: italic; }
@@ -575,7 +572,7 @@
             } catch(e) {}
         }
 
-        // ================= 聊天发送与详细报错 =================
+        // ================= 聊天发送与详细报错解析 =================
         function sendMessage() {
             var msg = userInput.value.trim(); if (!msg) return;
             addMessage(msg, 'user', false); userInput.value = ''; setStore('last_chat_time', Date.now().toString());
@@ -587,7 +584,7 @@
             document.querySelectorAll('.message-wrapper').forEach(function(el) {
                 var s = el.classList.contains('user') ? 'user' : 'assistant';
                 var t = el.querySelector('.message-text');
-                if (t && t.textContent && t.textContent.indexOf('信号不太好') === -1 && t.textContent.indexOf('网络') === -1) {
+                if (t && t.textContent && t.textContent.indexOf('系统报错') === -1 && t.textContent.indexOf('连接失败') === -1) {
                     history.push({ role: s, content: t.textContent.trim() });
                 }
             });
@@ -597,7 +594,15 @@
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ model: MODEL_NAME, messages: messages, temperature: 0.7, max_tokens: 200 })
             }).then(function(res) { 
-                if (!res.ok) throw new Error('服务器返回: ' + res.status); 
+                // 详细提取后端错误
+                if (!res.ok) {
+                    return res.json().then(function(errData) {
+                        throw new Error((errData.error || '未知错误') + (errData.details ? ' -> ' + JSON.stringify(errData.details) : ''));
+                    }).catch(function(e) {
+                        if (e.message.indexOf('未知错误') > -1) throw e;
+                        throw new Error('HTTP ' + res.status); // 如果解析 JSON 失败
+                    });
+                }
                 return res.json(); 
             }).then(function(data) {
                 typing.remove();
@@ -608,15 +613,8 @@
                 checkTriggerMoment(msg);
             }).catch(function(err) {
                 typing.remove(); 
-                // 直接将错误原因告诉用户
-                var exactError = String(err.message || '');
-                if (exactError === '服务器返回: 404') {
-                    addMessage('系统报错：找不到 api/chat.js 接口，请检查 Vercel 部署！', 'bot', false);
-                } else if (exactError === '服务器返回: 401') {
-                    addMessage('系统报错：阿里云 Key 无效，请检查 Vercel 环境变量！', 'bot', false);
-                } else {
-                    addMessage('连接失败 (' + exactError + ')，请检查网络或 Vercel 日志。', 'bot', false);
-                }
+                // 直接打印具体原因
+                addMessage('💥 请求失败：' + err.message, 'bot', false);
             });
         }
 
@@ -745,14 +743,12 @@
                     }
                 });
 
-                // 渲染点赞
                 var likesHtml = '';
                 if (m.likes && m.likes.length > 0) {
                     var likeNames = m.likes.map(function(u) { return '<span class="wx-like-user">' + getNPCName(u) + '</span>'; }).join('');
                     likesHtml = '<div class="wx-likes-box"><i class="fas fa-heart"></i> ' + likeNames + '</div>';
                 }
 
-                // 决定是否显示评论区外框
                 var showComments = m.comments.length > 0;
 
                 div.innerHTML = '<img src="' + avatarSrc + '" class="wx-post-avatar" ' + avatarOnclick + '>' +
@@ -808,7 +804,6 @@
             }
         }
 
-        // ================= NPC 点赞与评论逻辑 =================
         var NPC_PROMPTS = {
             'guanxuan': '你是关轩，Akso医院心外科医生，黎深的助手。性格活泼开朗，说话直来直去。用第一人称“我”。针对朋友圈内容回复，不超过25字。',
             'xiaoyuan': '你是小袁，本名袁晴，Akso医院护士。爱磕CP，说话活泼有闺蜜感。用第一人称“我”。针对朋友圈内容回复，不超过20字。',
@@ -860,22 +855,17 @@
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
 
-            // 初始化 likes 数组
             if (!moment.likes) moment.likes = [];
 
-            // 关轩：80%概率点赞，必定评论（3-5秒后）
             if (Math.random() < 0.8) moment.likes.push('guanxuan');
             setTimeout(function() { fetchAIComment(moment, 'guanxuan', null); }, 3000 + Math.random()*2000);
             
-            // 小袁：80%概率点赞，必定评论（5-8秒后）
             if (Math.random() < 0.8) moment.likes.push('xiaoyuan');
             setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null); }, 5000 + Math.random()*3000);
             
-            // 方院长：50%点赞，50%评论（8-11秒后）
             if (Math.random() < 0.5) moment.likes.push('fang');
             if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'fang', null); }, 8000 + Math.random()*3000);
             
-            // 疏白：50%点赞，50%评论（10-14秒后）
             if (Math.random() < 0.5) moment.likes.push('shubai');
             if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'shubai', null); }, 10000 + Math.random()*4000);
 
