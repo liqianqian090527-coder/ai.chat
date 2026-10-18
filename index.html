@@ -165,9 +165,10 @@
         .wx-post-text { font-size: 15px; color: var(--wx-text); line-height: 1.5; margin-bottom: 8px; word-wrap: break-word; }
         .wx-post-time { font-size: 12px; color: var(--wx-time); margin-bottom: 8px; }
         
-        .wx-post-actions { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+        .wx-post-actions { display: flex; justify-content: flex-end; margin-bottom: 4px; gap: 8px;}
         .wx-action-btn { background: #f7f7f7; border: none; padding: 4px 10px; border-radius: 4px; font-size: 13px; color: var(--wx-name); cursor: pointer; display: flex; align-items: center; gap: 4px;}
         .wx-action-btn i { font-size: 12px; }
+        .wx-action-btn.liked { color: #e74c3c; }
 
         .wx-likes-box { background: var(--wx-comment-bg); border-radius: 4px; padding: 8px 12px; font-size: 14px; margin-top: 4px; border-bottom: 1px solid #e5e5e5; }
         .wx-likes-box i { color: var(--wx-name); margin-right: 6px; font-size: 12px; }
@@ -594,26 +595,25 @@
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ model: MODEL_NAME, messages: messages, temperature: 0.7, max_tokens: 200 })
             }).then(function(res) { 
-                // 详细提取后端错误
                 if (!res.ok) {
                     return res.json().then(function(errData) {
                         throw new Error((errData.error || '未知错误') + (errData.details ? ' -> ' + JSON.stringify(errData.details) : ''));
                     }).catch(function(e) {
                         if (e.message.indexOf('未知错误') > -1) throw e;
-                        throw new Error('HTTP ' + res.status); // 如果解析 JSON 失败
+                        throw new Error('HTTP ' + res.status);
                     });
                 }
                 return res.json(); 
             }).then(function(data) {
                 typing.remove();
                 var raw = (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content : '...';
+                if (!raw || raw === 'null' || raw === 'undefined') raw = '（沉默）'; 
                 var parsed = extractMood(raw);
                 addMessage(parsed.text, 'bot', true);
                 if (parsed.mood) updateMoodBar(parsed.mood);
                 checkTriggerMoment(msg);
             }).catch(function(err) {
                 typing.remove(); 
-                // 直接打印具体原因
                 addMessage('💥 请求失败：' + err.message, 'bot', false);
             });
         }
@@ -622,6 +622,7 @@
         var moments = [];
         var currentView = 'discover'; 
         var chatTurnCount = 0; 
+        var editingMomentId = null; // 用于编辑朋友圈
 
         function initMoments() {
             var saved = getStore('moments_data');
@@ -638,7 +639,7 @@
             
             if (!moments || moments.length === 0) {
                 moments = [
-                    { id: 'm1', author: 'lishen', content: '今天连做了三台手术，终于结束了。外面的雪很大。', time: Date.now() - 86400000, comments: [], likes: [] }
+                    { id: 'm1', author: 'lishen', content: '今天连做了三台手术，终于结束了。外面的雪很大。', time: Date.now() - 86400000, comments: [], likes: ['guanxuan'] }
                 ];
                 saveMomentsData();
             }
@@ -743,6 +744,7 @@
                     }
                 });
 
+                // 渲染点赞
                 var likesHtml = '';
                 if (m.likes && m.likes.length > 0) {
                     var likeNames = m.likes.map(function(u) { return '<span class="wx-like-user">' + getNPCName(u) + '</span>'; }).join('');
@@ -751,12 +753,24 @@
 
                 var showComments = m.comments.length > 0;
 
+                // 按钮区（点赞、评论、编辑）
+                var hasLiked = m.likes && m.likes.indexOf('user') > -1;
+                var likeBtnClass = hasLiked ? 'wx-action-btn liked' : 'wx-action-btn';
+                var likeIcon = hasLiked ? '<i class="fas fa-heart"></i> 已赞' : '<i class="far fa-heart"></i> 赞';
+                
+                var editBtnHtml = '';
+                if (m.author === 'user') {
+                    editBtnHtml = '<button class="wx-action-btn" onclick="openEditMoment(\'' + m.id + '\')"><i class="fas fa-edit"></i> 编辑</button>';
+                }
+
                 div.innerHTML = '<img src="' + avatarSrc + '" class="wx-post-avatar" ' + avatarOnclick + '>' +
                     '<div class="wx-post-body">' +
                         '<div class="wx-post-name" ' + avatarOnclick + '>' + name + '</div>' +
                         '<div class="wx-post-text">' + m.content + '</div>' +
                         '<div class="wx-post-time">' + formatWechatTime(m.time) + '</div>' +
                         '<div class="wx-post-actions">' +
+                            editBtnHtml +
+                            '<button class="' + likeBtnClass + '" onclick="toggleLike(\'' + m.id + '\')">' + likeIcon + '</button>' +
                             '<button class="wx-action-btn" onclick="toggleCommentInput(\'' + m.id + '\')"><i class="fas fa-comment-dots"></i> 评论</button>' +
                         '</div>' +
                         likesHtml +
@@ -772,6 +786,22 @@
             });
             
             list.parentNode.scrollTop = scrollTop;
+        }
+
+        // 点赞功能
+        function toggleLike(momentId) {
+            var moment = moments.find(function(m){ return m.id === momentId; });
+            if (!moment) return;
+            if (!moment.likes) moment.likes = [];
+            
+            var idx = moment.likes.indexOf('user');
+            if (idx > -1) {
+                moment.likes.splice(idx, 1); // 取消赞
+            } else {
+                moment.likes.push('user'); // 点赞
+            }
+            saveMomentsData();
+            renderMoments();
         }
 
         function toggleCommentInput(id) {
@@ -804,6 +834,16 @@
             }
         }
 
+        // 编辑朋友圈
+        function openEditMoment(id) {
+            var moment = moments.find(function(m){ return m.id === id; });
+            if (!moment) return;
+            editingMomentId = id;
+            document.getElementById('publishText').value = moment.content;
+            openPublishModal();
+        }
+
+        // ================= NPC 评论生成 =================
         var NPC_PROMPTS = {
             'guanxuan': '你是关轩，Akso医院心外科医生，黎深的助手。性格活泼开朗，说话直来直去。用第一人称“我”。针对朋友圈内容回复，不超过25字。',
             'xiaoyuan': '你是小袁，本名袁晴，Akso医院护士。爱磕CP，说话活泼有闺蜜感。用第一人称“我”。针对朋友圈内容回复，不超过20字。',
@@ -815,11 +855,14 @@
             var isLishen = role === 'lishen';
             var prompt = "";
             
+            // 核心修复：明确区分是谁的朋友圈
+            var targetContext = moment.author === 'user' ? '用户（她）发的朋友圈' : '黎深发的朋友圈';
+            
             if (isLishen) {
                 prompt = "系统提示：用户评论了你的朋友圈：“" + userComment + "”。这条朋友圈的内容是：“" + moment.content + "”。请用你（黎深）的性格回复她，必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
             } else {
                 var sysPrompt = NPC_PROMPTS[role];
-                prompt = sysPrompt + "\n这条朋友圈的内容是：“" + moment.content + "”。请直接输出你的评论内容，不要加名字前缀，不要用引号。";
+                prompt = sysPrompt + "\n这是" + targetContext + "，内容是：“" + moment.content + "”。请直接输出你的评论内容，不要加名字前缀，不要用引号。";
             }
 
             fetch(API_URL, {
@@ -829,13 +872,15 @@
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 return res.json(); 
             }).then(function(data) {
-                var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '').replace(/^["']|["']$/g, '');
+                var reply = data.choices[0].message.content;
+                if (!reply || reply === 'null' || reply === 'undefined') reply = '...';
+                reply = reply.trim().replace(/\[mood.*?\]/g, '').replace(/^["']|["']$/g, '');
                 
                 if (isLishen) {
                     moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
                 }
                 
-                if (reply) {
+                if (reply && reply !== '...') {
                     moment.comments.push({ user: role, text: reply });
                 }
                 
@@ -851,35 +896,58 @@
             });
         }
 
+        // 触发 NPC 互动（必须点赞，概率触发评论）
         function triggerNPInteractions(momentId) {
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
 
             if (!moment.likes) moment.likes = [];
 
-            if (Math.random() < 0.8) moment.likes.push('guanxuan');
+            // 关轩：100%点赞，100%评论（3-5秒后）
+            if (moment.likes.indexOf('guanxuan') === -1) moment.likes.push('guanxuan');
             setTimeout(function() { fetchAIComment(moment, 'guanxuan', null); }, 3000 + Math.random()*2000);
             
-            if (Math.random() < 0.8) moment.likes.push('xiaoyuan');
+            // 小袁：100%点赞，100%评论（5-8秒后）
+            if (moment.likes.indexOf('xiaoyuan') === -1) moment.likes.push('xiaoyuan');
             setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null); }, 5000 + Math.random()*3000);
             
-            if (Math.random() < 0.5) moment.likes.push('fang');
+            // 方院长：100%点赞，50%概率评论（8-11秒后）
+            if (moment.likes.indexOf('fang') === -1) moment.likes.push('fang');
             if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'fang', null); }, 8000 + Math.random()*3000);
             
-            if (Math.random() < 0.5) moment.likes.push('shubai');
+            // 疏白：100%点赞，50%概率评论（10-14秒后）
+            if (moment.likes.indexOf('shubai') === -1) moment.likes.push('shubai');
             if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'shubai', null); }, 10000 + Math.random()*4000);
 
             saveMomentsData();
             if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
         }
 
-        function openPublishModal() { document.getElementById('publishModal').classList.add('show'); }
+        function openPublishModal() { 
+            editingMomentId = null; // 重置编辑状态
+            document.getElementById('publishText').value = '';
+            document.getElementById('publishModal').classList.add('show'); 
+        }
         function closePublishModal() { document.getElementById('publishModal').classList.remove('show'); }
         
         function submitMoment() {
             var text = document.getElementById('publishText').value.trim();
             if (!text) return;
+
+            // 如果是编辑模式
+            if (editingMomentId) {
+                var m = moments.find(function(item) { return item.id === editingMomentId; });
+                if (m) {
+                    m.content = text;
+                    saveMomentsData();
+                    renderMoments();
+                }
+                editingMomentId = null;
+                closePublishModal();
+                return;
+            }
             
+            // 新建朋友圈
             var newMoment = { id: 'm_' + Date.now(), author: 'user', content: text, time: Date.now(), comments: [], likes: [] };
             moments.unshift(newMoment);
             saveMomentsData();
@@ -890,7 +958,12 @@
             updateMomentsUI();
             renderMoments();
 
-            setTimeout(function() { fetchAIComment(newMoment, 'lishen', null); }, 1500);
+            // 黎深必定回复并点赞
+            setTimeout(function() { 
+                newMoment.likes.push('lishen');
+                fetchAIComment(newMoment, 'lishen', null); 
+            }, 1500);
+            
             triggerNPInteractions(newMoment.id);
         }
 
@@ -922,12 +995,14 @@
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.8, max_tokens: 100 })
             }).then(function(res){ return res.json(); }).then(function(data){
-                var content = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '').trim();
+                var content = data.choices[0].message.content;
+                if (!content) return;
+                content = content.trim().replace(/\[mood.*?\]/g, '').trim();
                 
-                if (content.indexOf('NO') === 0 || content === 'No' || content === 'no' || content === '') return;
+                if (content.indexOf('NO') === 0 || content === 'No' || content === 'no' || content === '' || content === 'null') return;
 
                 var newMomentId = 'm_' + Date.now();
-                moments.unshift({ id: newMomentId, author: 'lishen', content: content, time: Date.now(), comments: [], likes: [] });
+                moments.unshift({ id: newMomentId, author: 'lishen', content: content, time: Date.now(), comments: [], likes: ['guanxuan'] });
                 saveMomentsData();
                 setStore('last_moment_time', Date.now().toString());
                 
