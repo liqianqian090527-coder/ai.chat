@@ -44,7 +44,11 @@
         .nav-name { font-size: 18px; font-weight: 600; color: var(--text-main); letter-spacing: 0.5px; }
         .nav-status { font-size: 13px; color: var(--text-main); opacity: 0.8; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
         .nav-status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; transition: background 0.4s; }
-        .nav-menu { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8); color: var(--text-main); font-size: 20px; font-weight: bold; cursor: pointer; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        
+        /* 朋友圈与菜单按钮 */
+        .nav-btn-group { display: flex; gap: 8px; }
+        .nav-icon-btn { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8); color: var(--text-main); font-size: 18px; cursor: pointer; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .nav-icon-btn:hover { background: #fff; }
 
         /* ===== 聊天区 ===== */
         .chat-messages { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
@@ -121,38 +125,48 @@
         .pet-bubble { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); border-radius: 16px; padding: 10px 16px; font-size: 14px; color: var(--text-main); opacity: 0; transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap; }
         .pet-bubble.show { opacity: 1; }
 
-        /* ===== 朋友圈视图 ===== */
-        .moments-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f7f7f7; z-index: 100000; display: none; flex-direction: column; transition: transform 0.3s ease; }
+        /* ===== 微信同款朋友圈 ===== */
+        .moments-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; z-index: 100000; display: none; flex-direction: column; }
         .moments-overlay.show { display: flex; }
-        .moments-header { background: #fff; display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 10; }
-        .moments-back { background: none; border: none; font-size: 18px; color: var(--text-main); cursor: pointer; padding: 0 10px; }
-        .moments-title { flex: 1; text-align: center; font-size: 16px; font-weight: 600; color: var(--text-main); margin-right: 38px; }
-        .moments-content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+        .moments-header { background: #ededed; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #dcdcdc; }
+        .moments-back { background: none; border: none; font-size: 20px; color: #333; cursor: pointer; width: 40px; text-align: left; }
+        .moments-title { font-size: 17px; font-weight: 600; color: #000; }
+        .moments-publish { background: none; border: none; font-size: 20px; color: #333; cursor: pointer; width: 40px; text-align: right; }
+        .moments-content { flex: 1; overflow-y: auto; background: #fff; padding-bottom: 50px; }
         
-        .moments-cover { height: 180px; background: url('images/bg.jpg') center/cover; position: relative; }
-        .moments-cover-info { position: absolute; bottom: -20px; right: 20px; display: flex; align-items: flex-end; gap: 12px; }
-        .moments-cover-info span { font-size: 18px; font-weight: bold; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin-bottom: 25px; }
-        .moments-avatar { width: 70px; height: 70px; border-radius: 12px; border: 3px solid #fff; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .moments-cover { height: 280px; background: url('images/bg.jpg') center/cover; position: relative; }
+        .moments-cover-info { position: absolute; bottom: -30px; right: 20px; display: flex; align-items: flex-end; gap: 15px; }
+        .moments-cover-name { font-size: 18px; font-weight: bold; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin-bottom: 35px; }
+        .moments-avatar { width: 70px; height: 70px; border-radius: 10px; border: 3px solid #fff; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-        .moment-post { background: #fff; padding: 16px; display: flex; gap: 12px; border-bottom: 1px solid #f0f0f0; }
-        .moment-avatar { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; }
-        .moment-body { flex: 1; }
+        .moment-list { margin-top: 40px; }
+        .moment-post { padding: 20px; display: flex; gap: 12px; border-bottom: 1px solid #f0f0f0; }
+        .moment-avatar { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+        .moment-body { flex: 1; min-width: 0; }
         .moment-name { color: #576b95; font-weight: 600; font-size: 15px; margin-bottom: 4px; }
-        .moment-text { font-size: 15px; color: var(--text-main); line-height: 1.5; margin-bottom: 8px; }
-        .moment-time { font-size: 11px; color: #999; margin-bottom: 8px; }
-        .moment-actions { display: flex; justify-content: flex-end; gap: 10px; }
-        .moment-btn { background: #f0f0f0; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; color: #576b95; cursor: pointer; }
+        .moment-text { font-size: 15px; color: #333; line-height: 1.5; margin-bottom: 8px; word-wrap: break-word; }
+        .moment-time { font-size: 12px; color: #999; margin-bottom: 8px; }
+        .moment-actions { display: flex; justify-content: flex-end; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; margin-bottom: 8px; }
+        .moment-btn { background: #f7f7f7; border: none; padding: 4px 12px; border-radius: 4px; font-size: 13px; color: #576b95; cursor: pointer; }
         
-        .moment-comments { background: #f7f7f7; border-radius: 6px; padding: 10px; margin-top: 10px; font-size: 13px; display: none; }
+        .moment-comments { background: #f7f7f7; border-radius: 4px; padding: 6px 12px; font-size: 14px; display: none; }
         .moment-comments.show { display: block; }
-        .comment-item { margin-bottom: 6px; line-height: 1.4; }
+        .comment-item { padding: 4px 0; line-height: 1.4; word-wrap: break-word; }
         .comment-user { color: #576b95; font-weight: 600; }
-        .comment-input-area { display: flex; gap: 8px; margin-top: 10px; }
-        .comment-input-area input { flex: 1; border: 1px solid #eee; padding: 6px 10px; border-radius: 4px; font-size: 13px; outline: none; }
-        .comment-input-area button { background: var(--primary); color: #fff; border: none; border-radius: 4px; padding: 0 12px; font-size: 13px; cursor: pointer; }
-
-        .publish-btn { position: absolute; bottom: 30px; right: 30px; width: 50px; height: 50px; background: var(--primary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(74,144,226,0.4); cursor: pointer; z-index: 10; }
         
+        .comment-input-bar { display: none; background: #f7f7f7; padding: 8px 12px; border-radius: 4px; margin-top: 6px; gap: 8px; }
+        .comment-input-bar.show { display: flex; }
+        .comment-input-bar input { flex: 1; border: none; background: #fff; padding: 6px 10px; border-radius: 4px; font-size: 13px; outline: none; }
+        .comment-input-bar button { background: #07c160; color: #fff; border: none; border-radius: 4px; padding: 0 12px; font-size: 13px; cursor: pointer; }
+
+        /* 编辑朋友圈弹窗 */
+        .publish-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; z-index: 100001; display: none; flex-direction: column; }
+        .publish-modal.show { display: flex; }
+        .publish-header { display: flex; justify-content: space-between; padding: 16px; border-bottom: 1px solid #eee; background: #ededed; }
+        .publish-cancel { border:none; background:none; font-size:16px; color: #333; }
+        .publish-submit { background: #07c160; color: #fff; border: none; padding: 6px 20px; border-radius: 4px; cursor: pointer; font-size: 15px; }
+        .publish-textarea { flex: 1; border: none; outline: none; padding: 16px; font-size: 16px; resize: none; font-family: inherit; }
+
         /* ===== 移动端适配 ===== */
         @media (max-width: 640px) {
             body { padding-top: 0; align-items: stretch; }
@@ -172,13 +186,6 @@
             .music-player.expanded .mobile-music-icon { display: none; }
         }
         @media (min-width: 641px) { .mobile-music-icon { display: none; } }
-        
-        /* 编辑朋友圈弹窗 */
-        .publish-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; z-index: 100001; display: none; flex-direction: column; }
-        .publish-modal.show { display: flex; }
-        .publish-header { display: flex; justify-content: space-between; padding: 16px; border-bottom: 1px solid #eee; }
-        .publish-textarea { flex: 1; border: none; outline: none; padding: 16px; font-size: 16px; resize: none; font-family: inherit; }
-        .publish-submit { background: var(--primary); color: #fff; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -190,15 +197,19 @@
     <!-- 聊天主界面 -->
     <div class="chat-container">
         <div class="chat-nav">
-            <div class="nav-avatar" id="navAvatarBox" onclick="openMoments('lishen')"></div>
-            <div class="nav-info" onclick="openMoments('lishen')">
+            <div class="nav-avatar" id="navAvatarBox"></div>
+            <div class="nav-info">
                 <div class="nav-name">黎深</div>
                 <div class="nav-status">
                     <span class="dot" id="moodDot"></span>
                     <span id="moodText">在线 · 平静</span>
                 </div>
             </div>
-            <button class="nav-menu" id="menuBtn">☰</button>
+            <div class="nav-btn-group">
+                <!-- 朋友圈专属入口，替代原先菜单里的选项 -->
+                <button class="nav-icon-btn" id="momentsEntryBtn" title="朋友圈"><i class="fas fa-camera"></i></button>
+                <button class="nav-icon-btn" id="menuBtn">☰</button>
+            </div>
         </div>
 
         <div class="chat-messages" id="chatMessages"></div>
@@ -209,12 +220,11 @@
         </div>
     </div>
 
-    <!-- 下拉菜单 -->
+    <!-- 下拉菜单 (移除了朋友圈入口) -->
     <div class="dropdown-menu" id="dropdownMenu">
         <button class="menu-item" onclick="toggleMusicPlayer()"><i class="fas fa-music"></i> 显示音乐</button>
         <button class="menu-item" onclick="triggerBgUpload()"><i class="fas fa-image"></i> 更换背景</button>
         <button class="menu-item" onclick="triggerAvatarUpload()"><i class="fas fa-user-circle"></i> 更换头像</button>
-        <button class="menu-item" onclick="openMoments('user')"><i class="fas fa-user-friends"></i> 我的朋友圈</button>
         <button class="menu-item" onclick="exportChat()"><i class="fas fa-download"></i> 导出对话</button>
         <button class="menu-item" onclick="toggleTheme()"><i class="fas fa-moon"></i> 夜间模式</button>
         <button class="menu-item" onclick="promptClear()" style="color: #e74c3c;"><i class="fas fa-trash-alt"></i> 清空全部</button>
@@ -252,28 +262,28 @@
     <!-- 桌面宠物 -->
     <div class="desktop-pet" id="desktopPet"></div>
 
-    <!-- 朋友圈视图 -->
+    <!-- 微信同款朋友圈页面 -->
     <div class="moments-overlay" id="momentsOverlay">
         <div class="moments-header">
-            <button class="moments-back" onclick="closeMoments()"><i class="fas fa-chevron-left"></i> 返回</button>
-            <div class="moments-title" id="momentsTitle">黎深的朋友圈</div>
+            <button class="moments-back" onclick="closeMoments()"><i class="fas fa-chevron-left"></i></button>
+            <div class="moments-title">朋友圈</div>
+            <button class="moments-publish" onclick="openPublishModal()"><i class="fas fa-camera"></i></button>
         </div>
         <div class="moments-content" id="momentsContent">
             <div class="moments-cover" id="momentsCover">
                 <div class="moments-cover-info">
-                    <span id="momentsCoverName">黎深</span>
+                    <span class="moments-cover-name">黎深</span>
                     <img src="" class="moments-avatar" id="momentsCoverAvatar">
                 </div>
             </div>
-            <div id="momentsList"></div>
+            <div class="moment-list" id="momentsList"></div>
         </div>
-        <div class="publish-btn" id="publishBtn" onclick="openPublishModal()" style="display: none;">+</div>
     </div>
 
     <!-- 发朋友圈弹窗 -->
     <div class="publish-modal" id="publishModal">
         <div class="publish-header">
-            <button onclick="closePublishModal()" style="border:none;background:none;font-size:16px;">取消</button>
+            <button class="publish-cancel" onclick="closePublishModal()">取消</button>
             <button class="publish-submit" onclick="submitMoment()">发表</button>
         </div>
         <textarea class="publish-textarea" id="publishText" placeholder="这一刻的想法..."></textarea>
@@ -339,8 +349,25 @@
             reader.readAsDataURL(file);
         };
 
-        // ================= 聊天与情绪 =================
-        function getTimeString() { return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }); }
+        // ================= 微信同款时间格式化 =================
+        function formatWechatTime(ts) {
+            var now = new Date();
+            var date = new Date(ts);
+            var diff = now - date;
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            
+            var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            var target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            var dayDiff = Math.floor((today - target) / 86400000);
+            if (dayDiff === 1) return '昨天';
+            if (dayDiff === 2) return '前天';
+            if (dayDiff < 7) return ['周日','周一','周二','周三','周四','周五','周六'][date.getDay()];
+            return (date.getMonth() + 1) + '月' + date.getDate() + '日';
+        }
+
+        // 聊天日期分割
         function formatDate(ts) {
             var now = new Date(), msgDate = new Date(ts), today = new Date(now.getFullYear(), now.getMonth(), now.getDate()), target = new Date(msgDate.getFullYear(), msgDate.getMonth(), msgDate.getDate());
             var diff = Math.floor((today - target) / (24 * 60 * 60 * 1000));
@@ -357,6 +384,9 @@
             }
         }
 
+        // ================= 聊天与情绪 =================
+        function getTimeString() { return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }); }
+        
         function extractMood(raw) {
             if (!raw) return { text: '', mood: null };
             var m = raw.match(/\[mood\s*[:：]\s*([^\]]+?)\s*\]/i);
@@ -505,10 +535,9 @@
             });
         }
 
-        // ================= 朋友圈核心逻辑 =================
+        // ================= 朋友圈逻辑 =================
         var moments = [];
-        var currentMomentUser = 'lishen'; 
-        var chatTurnCount = 0; // 聊天轮数计数器
+        var chatTurnCount = 0; 
 
         function initMoments() {
             var saved = getStore('moments_data');
@@ -516,8 +545,8 @@
                 moments = JSON.parse(saved);
             } else {
                 moments = [
-                    { id: 'm1', author: 'lishen', content: '今天连做了三台手术，终于结束了。外面的雪很大，你那边冷吗？', time: Date.now() - 86400000, comments: [{ user: 'user', text: '注意休息，别太累了。' }, { user: 'lishen', text: '嗯，听你的。' }] },
-                    { id: 'm2', author: 'lishen', content: '路过那家甜品店，顺手买了一份。不知道你什么时候有空来拿。', time: Date.now() - 172800000, comments: [] }
+                    { id: 'm1', author: 'lishen', content: '今天连做了三台手术，终于结束了。外面的雪很大，不知道她那边冷不冷。', time: Date.now() - 86400000, comments: [{ user: 'user', text: '注意休息，别太累了。' }, { user: 'lishen', text: '嗯，我没事。' }] },
+                    { id: 'm2', author: 'lishen', content: '路过那家甜品店，顺手买了一份。不知道她什么时候有空来拿。', time: Date.now() - 172800000, comments: [] }
                 ];
                 saveMomentsData();
             }
@@ -525,17 +554,10 @@
 
         function saveMomentsData() { setStore('moments_data', JSON.stringify(moments)); }
 
-        function openMoments(type) {
-            currentMomentUser = type;
+        function openMoments() {
             document.getElementById('momentsOverlay').classList.add('show');
-            document.getElementById('publishBtn').style.display = type === 'user' ? 'flex' : 'none';
-            
             var avatarSrc = getStore('custom_avatar') || 'images/lishen.png';
-            var userAvatar = 'images/user.png';
-            document.getElementById('momentsTitle').textContent = type === 'lishen' ? '黎深的朋友圈' : '我的朋友圈';
-            document.getElementById('momentsCoverName').textContent = type === 'lishen' ? '黎深' : '我';
-            document.getElementById('momentsCoverAvatar').src = type === 'lishen' ? avatarSrc : userAvatar;
-            
+            document.getElementById('momentsCoverAvatar').src = avatarSrc;
             renderMoments();
         }
 
@@ -544,11 +566,11 @@
         function renderMoments() {
             var list = document.getElementById('momentsList');
             list.innerHTML = '';
-            var filtered = moments.filter(function(m) {
-                return currentMomentUser === 'lishen' ? m.author === 'lishen' : m.author === 'user';
-            });
 
-            filtered.forEach(function(m) {
+            // 按时间倒序排列所有动态（包含自己和黎深的）
+            var sortedMoments = moments.slice().sort(function(a, b) { return b.time - a.time; });
+
+            sortedMoments.forEach(function(m) {
                 var div = document.createElement('div');
                 div.className = 'moment-post';
                 var avatarSrc = m.author === 'lishen' ? (getStore('custom_avatar') || 'images/lishen.png') : 'images/user.png';
@@ -564,25 +586,27 @@
                     '<div class="moment-body">' +
                         '<div class="moment-name">' + name + '</div>' +
                         '<div class="moment-text">' + m.content + '</div>' +
-                        '<div class="moment-time">' + formatDate(m.time) + '</div>' +
+                        '<div class="moment-time">' + formatWechatTime(m.time) + '</div>' +
                         '<div class="moment-actions">' +
-                            '<button class="moment-btn" onclick="toggleComments(\'' + m.id + '\')">💬 评论</button>' +
+                            '<button class="moment-btn" onclick="toggleCommentInput(\'' + m.id + '\')">💬 评论</button>' +
                         '</div>' +
                         '<div class="moment-comments ' + (m.comments.length > 0 ? 'show' : '') + '" id="comments-' + m.id + '">' +
                             commentsHtml +
-                            '<div class="comment-input-area">' +
-                                '<input type="text" id="input-' + m.id + '" placeholder="评论..." onkeydown="if(event.key===\'Enter\') addComment(\'' + m.id + '\')">' +
-                                '<button onclick="addComment(\'' + m.id + '\')">发送</button>' +
-                            '</div>' +
+                        '</div>' +
+                        '<div class="comment-input-bar" id="input-bar-' + m.id + '">' +
+                            '<input type="text" id="input-' + m.id + '" placeholder="评论..." onkeydown="if(event.key===\'Enter\') addComment(\'' + m.id + '\')">' +
+                            '<button onclick="addComment(\'' + m.id + '\')">发送</button>' +
                         '</div>' +
                     '</div>';
                 list.appendChild(div);
             });
         }
 
-        function toggleComments(id) {
-            var el = document.getElementById('comments-' + id);
+        function toggleCommentInput(id) {
+            var el = document.getElementById('input-bar-' + id);
             if (el) el.classList.toggle('show');
+            var input = document.getElementById('input-' + id);
+            if (input) input.focus();
         }
 
         function addComment(momentId) {
@@ -598,13 +622,13 @@
             saveMomentsData();
             renderMoments();
 
-            if (moment.author === 'lishen') {
-                setTimeout(function() { fetchAIComment(moment, text); }, 1500);
-            }
+            // 黎深回复用户
+            setTimeout(function() { fetchAIComment(moment, text); }, 1500);
         }
 
         function fetchAIComment(moment, userComment) {
-            var prompt = "系统提示：你现在正在看自己的朋友圈。这条朋友圈的内容是：“" + moment.content + "”。用户评论说：“" + userComment + "”。请用你（黎深）的性格回复她，不超过20字。不需要加 [mood:xxx] 格式。";
+            // 明确让黎深用第一人称回复
+            var prompt = "系统提示：你现在正在看朋友圈。这条朋友圈的内容是：“" + moment.content + "”。用户评论说：“" + userComment + "”。请用你（黎深）的性格回复她，你必须使用第一人称（我），不超过20字。不需要加 [mood:xxx] 格式。";
             fetch(API_URL, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 100 })
@@ -612,11 +636,10 @@
                 var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '');
                 moment.comments.push({ user: 'lishen', text: reply });
                 saveMomentsData();
-                if (document.getElementById('momentsOverlay').classList.contains('show') && currentMomentUser === 'lishen') renderMoments();
+                if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
             }).catch(function(e){});
         }
 
-        // 智能判断触发朋友圈（CD机制 + 上下文判断）
         function canPostMoment() {
             var lastTime = getStore('last_moment_time');
             if (!lastTime) return true;
@@ -627,10 +650,10 @@
 
         function checkTriggerMoment(userMsg) {
             chatTurnCount++;
-            if (chatTurnCount < 5) return; // 至少聊5句才评估
-            if (!canPostMoment()) return;  // 冷却期内不发
+            if (chatTurnCount < 5) return; 
+            if (!canPostMoment()) return;  
             
-            chatTurnCount = 0; // 重置计数
+            chatTurnCount = 0; 
 
             var historyContext = "";
             var wrappers = document.querySelectorAll('.message-wrapper');
@@ -641,12 +664,13 @@
                 if (t) historyContext += sender + "：" + t.textContent + "\n";
             }
 
+            // 明确让黎深用第一人称发朋友圈
             var prompt = "你叫黎深，男、27岁，心脏外科医生。你性格沉稳克制，不爱发朋友圈，只有遇到有感触的事、或者对心爱的人的关心产生了情绪波动时，才会偶尔发一条。\n\n" +
                          "下面是你们刚刚的聊天记录：\n" + historyContext + "\n\n" +
                          "请基于这段对话，判断你现在是否有必要发一条朋友圈。\n" +
                          "要求：\n" +
-                         "1. 如果觉得没必要发，或者对话太日常、太无聊，请仅仅回复三个字母：NO。\n" +
-                         "2. 如果觉得有必要发，请直接写出不超过 30 字的朋友圈文案（第一人称，符合你克制、温柔、理智的人设）。\n" +
+                         "1. 如果觉得没必要发，或者对话太日常，请仅仅回复三个字母：NO。\n" +
+                         "2. 如果觉得有必要发，请直接写出不超过 30 字的朋友圈文案。**必须是以'我'为视角的第一人称**（例如：'今天有点累，但想到她，觉得还好。'）。符合你克制、温柔、理智的人设。\n" +
                          "3. 不要加引号，不要解释，直接输出文案或 NO。不要带 [mood:xxx] 格式。";
 
             fetch(API_URL, {
@@ -661,11 +685,12 @@
                 saveMomentsData();
                 setStore('last_moment_time', Date.now().toString());
                 
-                if (document.getElementById('momentsOverlay').classList.contains('show') && currentMomentUser === 'lishen') renderMoments();
-                addMessage('（黎深刚刚好像发了一条朋友圈，去他主页看看吧）', 'bot', false);
+                if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                addMessage('（黎深刚刚发了一条朋友圈）', 'bot', false);
             }).catch(function(e){});
         }
 
+        // 用户发朋友圈
         function openPublishModal() { document.getElementById('publishModal').classList.add('show'); }
         function closePublishModal() { document.getElementById('publishModal').classList.remove('show'); }
         
@@ -680,8 +705,9 @@
             closePublishModal();
             renderMoments();
             
+            // 黎深回复
             setTimeout(function() {
-                var prompt = "系统提示：用户发了一条朋友圈：“" + text + "”。请用你（黎深）的性格回复她，不超过20字。不需要加 [mood:xxx] 格式。";
+                var prompt = "系统提示：用户发了一条朋友圈：“" + text + "”。请用你（黎深）的性格回复她，你必须使用第一人称（我），不超过20字。不需要加 [mood:xxx] 格式。";
                 fetch(API_URL, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 100 })
@@ -689,7 +715,7 @@
                     var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '');
                     newMoment.comments.push({ user: 'lishen', text: reply });
                     saveMomentsData();
-                    if (document.getElementById('momentsOverlay').classList.contains('show') && currentMomentUser === 'user') renderMoments();
+                    if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
                 }).catch(function(){});
             }, 2500);
         }
@@ -833,6 +859,7 @@
             }
             makeDraggable(musicPlayer);
             
+            document.getElementById('momentsEntryBtn').onclick = openMoments;
             document.getElementById('sendButton').onclick = sendMessage;
             document.getElementById('userInput').onkeydown = function(e) { if (e.key === 'Enter') sendMessage(); };
         };
