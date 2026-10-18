@@ -27,14 +27,6 @@
         .snow-layer .flake { position: absolute; top: -30px; color: rgba(255, 255, 255, 0.9); filter: drop-shadow(0 0 4px rgba(180, 220, 255, 0.8)); animation: snowFall linear infinite; }
         @keyframes snowFall { 0% { transform: translateY(-6vh) translateX(0) rotate(0deg); opacity: 0; } 8% { opacity: 1; } 50% { transform: translateY(50vh) translateX(4vw) rotate(180deg); } 92% { opacity: 1; } 100% { transform: translateY(106vh) translateX(-2vw) rotate(360deg); opacity: 0; } }
         
-        .aurora-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 60vh; pointer-events: none; z-index: 1; opacity: 0; transition: opacity 2s ease; }
-        .aurora-layer.show { opacity: 1; }
-        .aurora-band { position: absolute; top: -10%; left: -20%; width: 140%; height: 65%; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; }
-        .aurora-band.a1 { background: linear-gradient(90deg, transparent, rgba(110, 220, 255, 0.2), rgba(140, 190, 255, 0.15), transparent); animation: auroraShift1 12s ease-in-out infinite alternate; }
-        .aurora-band.a2 { background: linear-gradient(90deg, transparent, rgba(150, 200, 255, 0.15), rgba(120, 230, 255, 0.2), transparent); animation: auroraShift2 16s ease-in-out infinite alternate; top: -4%; }
-        @keyframes auroraShift1 { 0% { transform: translateX(-6%) skewX(-8deg) scaleY(1); opacity: 0.7; } 50% { transform: translateX(3%) skewX(-4deg) scaleY(1.15); opacity: 1; } 100% { transform: translateX(8%) skewX(-10deg) scaleY(0.9); opacity: 0.75; } }
-        @keyframes auroraShift2 { 0% { transform: translateX(5%) skewX(6deg) scaleY(1.1); opacity: 0.6; } 50% { transform: translateX(-3%) skewX(10deg) scaleY(0.95); opacity: 0.9; } 100% { transform: translateX(-8%) skewX(4deg) scaleY(1.2); opacity: 0.7; } }
-
         /* ===== 聊天容器 ===== */
         .chat-container {
             width: 600px; height: 800px; max-width: 94vw; max-height: 88vh; 
@@ -45,16 +37,14 @@
 
         /* ===== 头部 ===== */
         .chat-nav { display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; gap: 14px; background: rgba(255,255,255,0.3); }
-        .nav-avatar { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff; flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-main); overflow: hidden; box-shadow: 0 4px 10px rgba(74,144,226,0.1); }
+        .nav-avatar { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff; flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-main); overflow: hidden; box-shadow: 0 4px 10px rgba(74,144,226,0.1); cursor: pointer; transition: transform 0.2s; }
+        .nav-avatar:hover { transform: scale(1.05); }
         .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .nav-info { flex: 1; }
+        .nav-info { flex: 1; cursor: pointer; }
         .nav-name { font-size: 18px; font-weight: 600; color: var(--text-main); letter-spacing: 0.5px; }
         .nav-status { font-size: 13px; color: var(--text-main); opacity: 0.8; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
         .nav-status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; transition: background 0.4s; }
-        
-        /* 菜单按钮强化 */
         .nav-menu { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8); color: var(--text-main); font-size: 20px; font-weight: bold; cursor: pointer; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .nav-menu:hover { background: #fff; }
 
         /* ===== 聊天区 ===== */
         .chat-messages { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
@@ -75,7 +65,6 @@
         .message.bot { background: rgba(255, 255, 255, 0.9); border-bottom-left-radius: 6px; border: 1px solid #fff; }
         .message .time { font-size: 10px; opacity: 0.4; margin-left: 8px; display: inline-block; }
         
-        /* 单条删除按钮（改为蓝色） */
         .delete-btn { position: absolute; top: -8px; width: 22px; height: 22px; background: var(--primary); color: #fff; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(74,144,226,0.4); z-index: 10; transition: 0.2s; }
         .message-wrapper.user .delete-btn { left: -8px; }
         .message-wrapper.bot .delete-btn { right: -8px; }
@@ -93,129 +82,116 @@
         .chat-input-area input { flex: 1; padding: 12px 20px; border: 1px solid rgba(255,255,255,0.8); border-radius: 24px; background: rgba(255,255,255,0.7); outline: none; font-size: 15px; color: var(--text-main); min-height: 46px; transition: 0.3s; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
         .chat-input-area input:focus { background: #fff; box-shadow: 0 0 0 3px rgba(74,144,226,0.15); }
         .chat-input-area button { padding: 0 24px; background: var(--primary); color: white; border: none; border-radius: 24px; font-size: 15px; cursor: pointer; font-weight: 600; flex-shrink: 0; min-height: 46px; transition: 0.2s; box-shadow: 0 4px 12px rgba(74,144,226,0.3); }
-        .chat-input-area button:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
-        /* ===== 音乐播放器 (桌面端) ===== */
+        /* ===== 音乐播放器 ===== */
         .music-player { position: fixed; top: 30px; right: 30px; z-index: 999; width: 300px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(24px); border-radius: 24px; padding: 16px; border: 1px solid var(--glass-border); box-shadow: 0 15px 35px rgba(74,144,226,0.1); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); user-select: none; cursor: grab; touch-action: none; }
-        .music-player:active { cursor: grabbing; }
         .music-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); }
         .track-name { color: var(--text-main); font-size: 14px; font-weight: 600; }
-        .minimize-btn { background: rgba(0,0,0,0.05); border: none; color: var(--text-main); cursor: pointer; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 12px; }
-        .minimize-btn:hover { background: rgba(0,0,0,0.1); }
+        .minimize-btn { background: rgba(0,0,0,0.05); border: none; color: var(--text-main); cursor: pointer; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .music-body { display: flex; flex-direction: column; gap: 12px; align-items: center; }
         .record-disc { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #4a5a6a, #1a2a3a); position: relative; animation: spin 10s linear infinite; animation-play-state: paused; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .record-disc.playing { animation-play-state: running; }
         .record-disc .center-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
         .music-controls { display: flex; align-items: center; gap: 10px; width: 100%; }
-        .music-controls button { background: var(--primary); border: none; border-radius: 50%; width: 32px; height: 32px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
-        .music-controls button:hover { transform: scale(1.05); }
+        .music-controls button { background: var(--primary); border: none; border-radius: 50%; width: 32px; height: 32px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .progress-slider { flex: 1; height: 4px; -webkit-appearance: none; background: rgba(74,144,226,0.15); border-radius: 4px; outline: none; }
-        .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); cursor: pointer; box-shadow: 0 2px 6px rgba(74,144,226,0.4); }
-        .time-display { font-size: 11px; color: var(--text-main); opacity: 0.7; font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 4px; }
+        .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); cursor: pointer; }
+        .time-display { font-size: 11px; color: var(--text-main); opacity: 0.7; margin-top: 4px; }
 
-        /* ===== 自定义弹窗 (Modal) ===== */
+        /* ===== 弹窗 & 菜单 ===== */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .modal-overlay.show { display: flex; }
-        .modal-box { background: #fff; border-radius: 20px; padding: 24px; width: 300px; max-width: 90vw; box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .modal-box { background: #fff; border-radius: 20px; padding: 24px; width: 300px; max-width: 90vw; text-align: center; }
         .modal-title { font-size: 17px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; }
-        .modal-desc { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+        .modal-desc { font-size: 13px; color: #666; margin-bottom: 20px; }
         .modal-btns { display: flex; gap: 10px; }
-        .modal-btn { flex: 1; padding: 10px 0; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .modal-btn { flex: 1; padding: 10px 0; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; }
         .modal-btn.cancel { background: #f0f0f0; color: #666; }
         .modal-btn.confirm { background: var(--primary); color: #fff; }
-        .modal-btn:hover { opacity: 0.8; }
 
-        /* ===== 下拉菜单 (精致版) ===== */
-        .dropdown-menu { position: fixed; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 12px; padding: 6px; min-width: 140px; z-index: 9999; display: none; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        .dropdown-menu { position: fixed; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 12px; padding: 6px; min-width: 140px; z-index: 9999; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
         .dropdown-menu.show { display: block; }
-        .dropdown-menu .menu-item { padding: 10px 14px; font-size: 13px; color: var(--text-main); border: none; background: none; width: 100%; text-align: left; cursor: pointer; transition: 0.2s; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
+        .dropdown-menu .menu-item { padding: 10px 14px; font-size: 13px; color: var(--text-main); border: none; background: none; width: 100%; text-align: left; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
         .dropdown-menu .menu-item:hover { background: rgba(74,144,226,0.1); color: var(--primary); }
 
         /* ===== 桌面宠物 ===== */
         .desktop-pet { position: fixed; z-index: 999; width: 200px; height: 200px; border-radius: 50%; cursor: grab; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: none; }
-        .desktop-pet:active { cursor: grabbing; }
         .desktop-pet img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; pointer-events: none; }
-        .desktop-pet .pet-placeholder { font-size: 100px; color: var(--text-main); opacity: 0.2; font-weight: 300; display: none; }
-        .pet-bubble { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-radius: 16px; padding: 10px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); font-size: 14px; color: var(--text-main); max-width: 200px; border: 1px solid #fff; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap; text-align: center; }
+        .pet-bubble { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); border-radius: 16px; padding: 10px 16px; font-size: 14px; color: var(--text-main); opacity: 0; transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap; }
         .pet-bubble.show { opacity: 1; }
-        .pet-bubble::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid rgba(255,255,255,0.95); }
 
-        /* ===== 夜间模式 ===== */
-        body.night-mode { background-color: #0f172a; }
-        body.night-mode .chat-container { background: rgba(15, 23, 42, 0.7); border-color: rgba(255,255,255,0.1); }
-        body.night-mode .chat-nav { background: rgba(255,255,255,0.05); border-bottom-color: rgba(255,255,255,0.05); }
-        body.night-mode .nav-name, body.night-mode .nav-status { color: #e2e8f0; }
-        body.night-mode .nav-menu { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.1); }
-        body.night-mode .message.user { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: #fff; border-color: rgba(255,255,255,0.1); }
-        body.night-mode .message.bot { background: rgba(30, 41, 59, 0.9); color: #e2e8f0; border-color: rgba(255,255,255,0.1); }
-        body.night-mode .chat-input-area { background: rgba(255,255,255,0.05); }
-        body.night-mode .chat-input-area input { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.1); }
-        body.night-mode .music-player { background: rgba(15, 23, 42, 0.6); border-color: rgba(255,255,255,0.1); }
-        body.night-mode .track-name { color: #fff; }
-        body.night-mode .modal-box { background: #1e293b; }
-        body.night-mode .modal-title { color: #fff; }
-        body.night-mode .modal-btn.cancel { background: rgba(255,255,255,0.1); color: #ccc; }
+        /* ===== 朋友圈视图 ===== */
+        .moments-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f7f7f7; z-index: 100000; display: none; flex-direction: column; transition: transform 0.3s ease; }
+        .moments-overlay.show { display: flex; }
+        .moments-header { background: #fff; display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 10; }
+        .moments-back { background: none; border: none; font-size: 18px; color: var(--text-main); cursor: pointer; padding: 0 10px; }
+        .moments-title { flex: 1; text-align: center; font-size: 16px; font-weight: 600; color: var(--text-main); margin-right: 38px; }
+        .moments-content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+        
+        .moments-cover { height: 180px; background: url('images/bg.jpg') center/cover; position: relative; }
+        .moments-cover-info { position: absolute; bottom: -20px; right: 20px; display: flex; align-items: flex-end; gap: 12px; }
+        .moments-cover-info span { font-size: 18px; font-weight: bold; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin-bottom: 25px; }
+        .moments-avatar { width: 70px; height: 70px; border-radius: 12px; border: 3px solid #fff; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
+        .moment-post { background: #fff; padding: 16px; display: flex; gap: 12px; border-bottom: 1px solid #f0f0f0; }
+        .moment-avatar { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; }
+        .moment-body { flex: 1; }
+        .moment-name { color: #576b95; font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .moment-text { font-size: 15px; color: var(--text-main); line-height: 1.5; margin-bottom: 8px; }
+        .moment-time { font-size: 11px; color: #999; margin-bottom: 8px; }
+        .moment-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .moment-btn { background: #f0f0f0; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; color: #576b95; cursor: pointer; }
+        
+        .moment-comments { background: #f7f7f7; border-radius: 6px; padding: 10px; margin-top: 10px; font-size: 13px; display: none; }
+        .moment-comments.show { display: block; }
+        .comment-item { margin-bottom: 6px; line-height: 1.4; }
+        .comment-user { color: #576b95; font-weight: 600; }
+        .comment-input-area { display: flex; gap: 8px; margin-top: 10px; }
+        .comment-input-area input { flex: 1; border: 1px solid #eee; padding: 6px 10px; border-radius: 4px; font-size: 13px; outline: none; }
+        .comment-input-area button { background: var(--primary); color: #fff; border: none; border-radius: 4px; padding: 0 12px; font-size: 13px; cursor: pointer; }
+
+        .publish-btn { position: absolute; bottom: 30px; right: 30px; width: 50px; height: 50px; background: var(--primary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(74,144,226,0.4); cursor: pointer; z-index: 10; }
+        
         /* ===== 移动端适配 ===== */
         @media (max-width: 640px) {
             body { padding-top: 0; align-items: stretch; }
-            .chat-container { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; margin: 0; border: none; }
+            .chat-container { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border: none; }
             .message { max-width: 82% !important; padding: 12px 16px; }
             .chat-input-area { padding: 12px 16px; }
             .chat-input-area input, .chat-input-area button { min-height: 40px; font-size: 14px; }
-            
-            /* Q版小人位置 */
             .desktop-pet { width: 80px; height: 80px; bottom: 100px !important; left: 10px !important; top: auto !important; right: auto !important; }
             
-            /* 手机端菜单按钮更明显 */
-            .nav-menu { font-size: 18px; background: rgba(255,255,255,0.8); }
-
-            /* 手机音乐播放器变成极小的悬浮球 */
-            .music-player { 
-                top: 15px; right: 15px; width: 44px; height: 44px; padding: 0; 
-                border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-                z-index: 10000; background: rgba(255, 255, 255, 0.85); 
-                border: 1px solid rgba(74,144,226,0.3); box-shadow: 0 4px 15px rgba(74,144,226,0.2); 
-                transition: all 0.3s ease; overflow: hidden; 
-            }
+            .music-player { top: 15px; right: 15px; width: 44px; height: 44px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10000; background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(74,144,226,0.3); box-shadow: 0 4px 15px rgba(74,144,226,0.2); transition: all 0.3s ease; overflow: hidden; }
             .music-player .music-header, .music-player .music-body { display: none !important; }
-            
-            /* 点击展开后的手机端小悬浮条 */
-            .music-player.expanded { 
-                width: 220px; height: 54px; border-radius: 27px; padding: 8px 12px; 
-                flex-direction: row; background: rgba(255,255,255,0.98); align-items: center; 
-            }
-            .music-player.expanded .music-header { display: none !important; }
-            .music-player.expanded .music-body { 
-                display: flex !important; width: 100%; flex-direction: row; justify-content: space-between; align-items: center; gap: 8px; 
-            }
+            .music-player.expanded { width: 220px; height: 54px; border-radius: 27px; padding: 8px 12px; flex-direction: row; background: rgba(255,255,255,0.98); align-items: center; }
+            .music-player.expanded .music-body { display: flex !important; width: 100%; flex-direction: row; justify-content: space-between; align-items: center; gap: 8px; }
             .music-player.expanded .record-disc { display: none !important; }
             .music-player.expanded .time-display { font-size: 10px; }
-            
             .mobile-music-icon { display: flex; font-size: 20px; color: var(--primary); width: 100%; height: 100%; align-items: center; justify-content: center; }
             .music-player.expanded .mobile-music-icon { display: none; }
         }
         @media (min-width: 641px) { .mobile-music-icon { display: none; } }
+        
+        /* 编辑朋友圈弹窗 */
+        .publish-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; z-index: 100001; display: none; flex-direction: column; }
+        .publish-modal.show { display: flex; }
+        .publish-header { display: flex; justify-content: space-between; padding: 16px; border-bottom: 1px solid #eee; }
+        .publish-textarea { flex: 1; border: none; outline: none; padding: 16px; font-size: 16px; resize: none; font-family: inherit; }
+        .publish-submit { background: var(--primary); color: #fff; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <!-- 隐藏文件上传 -->
     <input type="file" id="bgUpload" accept="image/*" style="display: none;">
     <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
 
-    <!-- 特效层 -->
-    <div class="aurora-layer" id="auroraLayer"><div class="aurora-band a1"></div><div class="aurora-band a2"></div></div>
     <div class="snow-layer" id="snowLayer"></div>
 
     <!-- 聊天主界面 -->
     <div class="chat-container">
         <div class="chat-nav">
-            <div class="nav-avatar" id="navAvatarBox">
-                <!-- 这里会动态插入图片 -->
-            </div>
-            <div class="nav-info">
+            <div class="nav-avatar" id="navAvatarBox" onclick="openMoments('lishen')"></div>
+            <div class="nav-info" onclick="openMoments('lishen')">
                 <div class="nav-name">黎深</div>
                 <div class="nav-status">
                     <span class="dot" id="moodDot"></span>
@@ -238,8 +214,8 @@
         <button class="menu-item" onclick="toggleMusicPlayer()"><i class="fas fa-music"></i> 显示音乐</button>
         <button class="menu-item" onclick="triggerBgUpload()"><i class="fas fa-image"></i> 更换背景</button>
         <button class="menu-item" onclick="triggerAvatarUpload()"><i class="fas fa-user-circle"></i> 更换头像</button>
+        <button class="menu-item" onclick="openMoments('user')"><i class="fas fa-user-friends"></i> 我的朋友圈</button>
         <button class="menu-item" onclick="exportChat()"><i class="fas fa-download"></i> 导出对话</button>
-        <button class="menu-item" onclick="askSearch()"><i class="fas fa-search"></i> 搜索</button>
         <button class="menu-item" onclick="toggleTheme()"><i class="fas fa-moon"></i> 夜间模式</button>
         <button class="menu-item" onclick="promptClear()" style="color: #e74c3c;"><i class="fas fa-trash-alt"></i> 清空全部</button>
     </div>
@@ -260,7 +236,7 @@
     <div class="music-player" id="musicPlayer">
         <span class="mobile-music-icon" id="mobileMusicIcon"><i class="fas fa-music"></i></span>
         <div class="music-header">
-            <span class="track-name" id="trackName">🎵 正在播放</span>
+            <span class="track-name">🎵 正在播放</span>
             <button class="minimize-btn" id="musicMinimize"><i class="fas fa-times"></i></button>
         </div>
         <div class="music-body">
@@ -274,21 +250,45 @@
     </div>
 
     <!-- 桌面宠物 -->
-    <div class="desktop-pet" id="desktopPet">
-        <!-- 动态插入图片 -->
+    <div class="desktop-pet" id="desktopPet"></div>
+
+    <!-- 朋友圈视图 -->
+    <div class="moments-overlay" id="momentsOverlay">
+        <div class="moments-header">
+            <button class="moments-back" onclick="closeMoments()"><i class="fas fa-chevron-left"></i> 返回</button>
+            <div class="moments-title" id="momentsTitle">黎深的朋友圈</div>
+        </div>
+        <div class="moments-content" id="momentsContent">
+            <div class="moments-cover" id="momentsCover">
+                <div class="moments-cover-info">
+                    <span id="momentsCoverName">黎深</span>
+                    <img src="" class="moments-avatar" id="momentsCoverAvatar">
+                </div>
+            </div>
+            <div id="momentsList"></div>
+        </div>
+        <div class="publish-btn" id="publishBtn" onclick="openPublishModal()" style="display: none;">+</div>
+    </div>
+
+    <!-- 发朋友圈弹窗 -->
+    <div class="publish-modal" id="publishModal">
+        <div class="publish-header">
+            <button onclick="closePublishModal()" style="border:none;background:none;font-size:16px;">取消</button>
+            <button class="publish-submit" onclick="submitMoment()">发表</button>
+        </div>
+        <textarea class="publish-textarea" id="publishText" placeholder="这一刻的想法..."></textarea>
     </div>
 
     <audio id="bgAudio" src="images/bg-music.mp3" loop preload="auto"></audio>
 
     <script>
-        // ================= 核心逻辑 =================
+        // ================= 核心配置 =================
         var API_URL = '/api/chat';
         var MODEL_NAME = 'qwen-plus';
-        var CHARACTER_PROMPT = "你叫黎深，男、27岁，Akso医院心脏外科主任医师。年上稳重熟男，处事极度沉稳。你在和一个你喜欢的女孩面对面聊天。对话控制在40字以内。用'你'或者'宝宝'称呼她。只说你会当面说出口的话，不要描述动作或表情。绝不使用'哦、呀、呢、啦'等语气词。\n\n【系统强制输出要求，必须绝对遵守】\n无论你回复什么，回复的第一句必须且只能以 [mood:情绪词] 开头！\n例如：[mood:想念] 我也想你，早点休息。\n情绪词必须从这六个词里选：平静、愉悦、担忧、疲惫、想念、吃醋。\n如果缺少 [mood:情绪词] 这个开头，系统将判定你回复失败。";
+        var CHARACTER_PROMPT = "你叫黎深，男、27岁，Akso医院心脏外科主任医师。年上稳重熟男。对话控制在30字以内。用'你'或者'宝宝'称呼她。不要说废话。\n\n【系统强制输出要求】\n回复的第一句必须以 [mood:情绪词] 开头！情绪词：平静、愉悦、担忧、疲惫、想念、吃醋。正文在30字以内。";
 
         var chatMessages = document.getElementById('chatMessages');
         var userInput = document.getElementById('userInput');
-        var sendButton = document.getElementById('sendButton');
         var messageIdCounter = 0;
         var lastDate = '';
 
@@ -308,204 +308,117 @@
         var desktopPet = document.getElementById('desktopPet');
         
         function loadImages() {
-            // 背景
             var savedBg = getStore('custom_bg');
             document.body.style.backgroundImage = savedBg ? 'url(' + savedBg + ')' : 'url(images/bg.jpg)';
-            
-            // 头像
             var customAvatar = getStore('custom_avatar');
             var avatarSrc = customAvatar ? customAvatar : 'images/lishen.png';
-            
-            // 顶部头像
             navAvatarBox.innerHTML = '<img src="' + avatarSrc + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'❄️\'; this.parentElement.style.display=\'flex\'; this.parentElement.style.alignItems=\'center\'; this.parentElement.style.justifyContent=\'center\';">';
-            
-            // 桌面Q版小人
             var petSrc = getStore('custom_pet') ? getStore('custom_pet') : 'images/lishen_q.png';
-            desktopPet.innerHTML = '<img src="' + petSrc + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'黎\'; this.parentElement.style.fontSize=\'100px\'; this.parentElement.style.opacity=\'0.2\';">' + 
-                                   '<div class="pet-bubble" id="petBubble"></div>';
-            
-            // 重新绑定小人气泡事件
+            desktopPet.innerHTML = '<img src="' + petSrc + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'黎\'; this.parentElement.style.fontSize=\'100px\'; this.parentElement.style.opacity=\'0.2\';">' + '<div class="pet-bubble" id="petBubble"></div>';
             bindPetEvents();
         }
 
         function triggerBgUpload() { bgUpload.click(); }
         bgUpload.onchange = function(e) {
-            var file = e.target.files[0];
-            if (!file) return;
+            var file = e.target.files[0]; if (!file) return;
             var reader = new FileReader();
-            reader.onload = function(evt) {
-                var base64 = evt.target.result;
-                document.body.style.backgroundImage = 'url(' + base64 + ')';
-                setStore('custom_bg', base64);
-            };
+            reader.onload = function(evt) { document.body.style.backgroundImage = 'url(' + evt.target.result + ')'; setStore('custom_bg', evt.target.result); };
             reader.readAsDataURL(file);
         };
 
         function triggerAvatarUpload() { avatarUpload.click(); }
         avatarUpload.onchange = function(e) {
-            var file = e.target.files[0];
-            if (!file) return;
+            var file = e.target.files[0]; if (!file) return;
             var reader = new FileReader();
             reader.onload = function(evt) {
-                var base64 = evt.target.result;
-                setStore('custom_avatar', base64);
-                setStore('custom_pet', base64); // 顺便把Q版小人也换成这个图
-                loadImages(); // 重新加载所有头像
-                // 更新历史记录中的头像
-                document.querySelectorAll('.message-wrapper.bot .avatar img').forEach(function(img) {
-                    img.src = base64;
-                });
+                setStore('custom_avatar', evt.target.result);
+                setStore('custom_pet', evt.target.result);
+                loadImages();
+                document.querySelectorAll('.message-wrapper.bot .avatar img').forEach(function(img) { img.src = evt.target.result; });
             };
             reader.readAsDataURL(file);
         };
 
-        // ================= 日期与时间 =================
-        function getTimeString() {
-            var d = new Date();
-            return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-        }
-
+        // ================= 聊天与情绪 =================
+        function getTimeString() { return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }); }
         function formatDate(ts) {
-            var now = new Date();
-            var msgDate = new Date(ts);
-            var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            var target = new Date(msgDate.getFullYear(), msgDate.getMonth(), msgDate.getDate());
+            var now = new Date(), msgDate = new Date(ts), today = new Date(now.getFullYear(), now.getMonth(), now.getDate()), target = new Date(msgDate.getFullYear(), msgDate.getMonth(), msgDate.getDate());
             var diff = Math.floor((today - target) / (24 * 60 * 60 * 1000));
-
             if (diff === 0) return '今天';
             if (diff === 1) return '昨天';
-            if (diff > 1 && diff < 7) {
-                var weeks = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-                return weeks[msgDate.getDay()];
-            }
+            if (diff > 1 && diff < 7) return ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][msgDate.getDay()];
             return (msgDate.getMonth() + 1) + '月' + msgDate.getDate() + '日';
         }
-
         function appendDateDivider(ts) {
             var key = new Date(ts).toDateString();
             if (key !== lastDate) {
                 lastDate = key;
-                var div = document.createElement('div');
-                div.className = 'date-divider';
-                div.textContent = formatDate(ts);
-                chatMessages.appendChild(div);
+                var div = document.createElement('div'); div.className = 'date-divider'; div.textContent = formatDate(ts); chatMessages.appendChild(div);
             }
         }
 
-        // ================= 情绪解析 =================
         function extractMood(raw) {
             if (!raw) return { text: '', mood: null };
             var m = raw.match(/\[mood\s*[:：]\s*([^\]]+?)\s*\]/i);
             if (!m) return { text: raw.trim(), mood: null };
-            var moodRaw = m[1].trim();
-            var text = raw.replace(m[0], '').trim();
-            return { text: text, mood: MOOD_MAP[moodRaw] ? moodRaw : null };
+            return { text: raw.replace(m[0], '').trim(), mood: MOOD_MAP[m[1].trim()] ? m[1].trim() : null };
         }
 
         function updateMoodBar(mood) {
-            var dot = document.getElementById('moodDot');
-            var txt = document.getElementById('moodText');
+            var dot = document.getElementById('moodDot'), txt = document.getElementById('moodText');
             if (!dot || !txt) return;
             var finalMood = (mood && MOOD_MAP[mood]) ? mood : '平静';
-            var cfg = MOOD_MAP[finalMood];
-            dot.style.background = cfg.color;
-            txt.textContent = '在线 · ' + finalMood;
-            txt.style.color = cfg.color;
+            dot.style.background = MOOD_MAP[finalMood].color; txt.textContent = '在线 · ' + finalMood; txt.style.color = MOOD_MAP[finalMood].color;
             setStore('lishen_last_mood', finalMood);
         }
 
-        // ================= 消息渲染 =================
         function createAvatar(sender) {
-            var img = document.createElement('img');
-            img.className = 'avatar';
-            if (sender === 'user') {
-                img.src = 'images/user.png';
-            } else {
-                var customAvatar = getStore('custom_avatar');
-                img.src = customAvatar ? customAvatar : 'images/lishen.png';
-            }
-            img.onerror = function() {
-                this.style.display = 'none';
-                var div = document.createElement('div');
-                div.className = 'avatar';
-                div.textContent = sender === 'user' ? '👤' : '❄️';
-                this.parentNode.insertBefore(div, this);
-            };
+            var img = document.createElement('img'); img.className = 'avatar';
+            img.src = sender === 'user' ? 'images/user.png' : (getStore('custom_avatar') || 'images/lishen.png');
+            img.onerror = function() { this.style.display = 'none'; var div = document.createElement('div'); div.className = 'avatar'; div.textContent = sender === 'user' ? '👤' : '❄️'; this.parentNode.insertBefore(div, this); };
             return img;
         }
 
         function addMessage(text, sender, typing) {
-            var ts = Date.now();
-            var container = document.createElement('div');
+            var ts = Date.now(), container = document.createElement('div');
             container.className = 'message-wrapper ' + sender;
             var msgId = 'msg-' + (++messageIdCounter) + '-' + ts;
-            container.dataset.id = msgId;
-            container.dataset.ts = ts;
-            
+            container.dataset.id = msgId; container.dataset.ts = ts;
             appendDateDivider(ts);
-            
-            var avatar = createAvatar(sender);
-            var div = document.createElement('div');
+            var avatar = createAvatar(sender), div = document.createElement('div');
             div.className = 'message ' + sender;
             
             var delBtn = document.createElement('div');
-            delBtn.className = 'delete-btn';
-            delBtn.innerHTML = '✕';
-            delBtn.onclick = function(e) {
-                e.stopPropagation();
-                deleteSingleMessage(msgId, container);
-            };
+            delBtn.className = 'delete-btn'; delBtn.innerHTML = '✕';
+            delBtn.onclick = function(e) { e.stopPropagation(); deleteSingleMessage(msgId, container); };
             div.appendChild(delBtn);
-
             div.onclick = function(e) {
                 if (e.target === delBtn) return;
                 document.querySelectorAll('.message').forEach(function(m){ m.classList.remove('active'); });
                 div.classList.add('active');
             };
             
-            var contentSpan = document.createElement('span');
-            contentSpan.className = 'message-text';
-            var timeSpan = document.createElement('span');
-            timeSpan.className = 'time';
-            timeSpan.textContent = getTimeString();
+            var contentSpan = document.createElement('span'); contentSpan.className = 'message-text';
+            var timeSpan = document.createElement('span'); timeSpan.className = 'time'; timeSpan.textContent = getTimeString();
             
-            div.appendChild(contentSpan);
-            div.appendChild(timeSpan);
-            container.appendChild(avatar);
-            container.appendChild(div);
-            chatMessages.appendChild(container);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            div.appendChild(contentSpan); div.appendChild(timeSpan);
+            container.appendChild(avatar); container.appendChild(div);
+            chatMessages.appendChild(container); chatMessages.scrollTop = chatMessages.scrollHeight;
 
             if (typing && sender === 'bot') {
-                var index = 0;
-                contentSpan.textContent = '';
+                var index = 0; contentSpan.textContent = '';
                 var interval = setInterval(function() {
-                    if (index < text.length) {
-                        contentSpan.textContent += text.charAt(index);
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                        index++;
-                    } else {
-                        clearInterval(interval);
-                        saveMessages();
-                    }
+                    if (index < text.length) { contentSpan.textContent += text.charAt(index); chatMessages.scrollTop = chatMessages.scrollHeight; index++; }
+                    else { clearInterval(interval); saveMessages(); }
                 }, 20);
-            } else {
-                contentSpan.textContent = text;
-                saveMessages();
-            }
+            } else { contentSpan.textContent = text; saveMessages(); }
         }
 
         function deleteSingleMessage(msgId, container) {
             showModal('删除消息', '确定要删除这条消息吗？', '删除', function() {
                 container.remove();
                 var saved = getStore('chatHistory');
-                if (saved) {
-                    try {
-                        var msgs = JSON.parse(saved);
-                        var newMsgs = msgs.filter(function(m){ return m.id !== msgId; });
-                        setStore('chatHistory', JSON.stringify(newMsgs));
-                    } catch(e){}
-                }
+                if (saved) { try { var msgs = JSON.parse(saved); setStore('chatHistory', JSON.stringify(msgs.filter(function(m){ return m.id !== msgId; }))); } catch(e){} }
                 reorganizeDividers();
             });
         }
@@ -516,13 +429,7 @@
             document.querySelectorAll('.message-wrapper').forEach(function(wrapper) {
                 var ts = parseInt(wrapper.dataset.ts) || Date.now();
                 var key = new Date(ts).toDateString();
-                if (key !== lastDate) {
-                    lastDate = key;
-                    var div = document.createElement('div');
-                    div.className = 'date-divider';
-                    div.textContent = formatDate(ts);
-                    wrapper.parentNode.insertBefore(div, wrapper);
-                }
+                if (key !== lastDate) { lastDate = key; var div = document.createElement('div'); div.className = 'date-divider'; div.textContent = formatDate(ts); wrapper.parentNode.insertBefore(div, wrapper); }
             });
         }
 
@@ -530,42 +437,27 @@
             var items = [];
             document.querySelectorAll('.message-wrapper').forEach(function(el) {
                 var textSpan = el.querySelector('.message-text');
-                items.push({
-                    id: el.dataset.id,
-                    ts: parseInt(el.dataset.ts),
-                    sender: el.classList.contains('user') ? 'user' : 'bot',
-                    text: textSpan ? textSpan.textContent : ''
-                });
+                items.push({ id: el.dataset.id, ts: parseInt(el.dataset.ts), sender: el.classList.contains('user') ? 'user' : 'bot', text: textSpan ? textSpan.textContent : '' });
             });
             setStore('chatHistory', JSON.stringify(items));
         }
 
         function loadMessages() {
-            var saved = getStore('chatHistory');
-            if (!saved) return;
+            var saved = getStore('chatHistory'); if (!saved) return;
             try {
-                var msgs = JSON.parse(saved);
-                if (!msgs.length) return;
+                var msgs = JSON.parse(saved); if (!msgs.length) return;
                 lastDate = '';
                 for (var i = 0; i < msgs.length; i++) {
-                    var msg = msgs[i];
-                    var container = document.createElement('div');
+                    var msg = msgs[i], container = document.createElement('div');
                     container.className = 'message-wrapper ' + msg.sender;
-                    container.dataset.id = msg.id;
-                    container.dataset.ts = msg.ts;
+                    container.dataset.id = msg.id; container.dataset.ts = msg.ts;
                     appendDateDivider(msg.ts);
-                    
-                    var avatar = createAvatar(msg.sender);
-                    var div = document.createElement('div');
+                    var avatar = createAvatar(msg.sender), div = document.createElement('div');
                     div.className = 'message ' + msg.sender;
                     
                     var delBtn = document.createElement('div');
-                    delBtn.className = 'delete-btn';
-                    delBtn.innerHTML = '✕';
-                    delBtn.onclick = function(e) {
-                        e.stopPropagation();
-                        deleteSingleMessage(this.parentNode.parentNode.dataset.id, this.parentNode.parentNode);
-                    };
+                    delBtn.className = 'delete-btn'; delBtn.innerHTML = '✕';
+                    delBtn.onclick = function(e) { e.stopPropagation(); deleteSingleMessage(this.parentNode.parentNode.dataset.id, this.parentNode.parentNode); };
                     div.appendChild(delBtn);
                     
                     div.onclick = function(e) {
@@ -574,358 +466,375 @@
                         this.classList.add('active');
                     };
 
-                    var contentSpan = document.createElement('span');
-                    contentSpan.className = 'message-text';
-                    contentSpan.textContent = msg.text;
-                    var timeSpan = document.createElement('span');
-                    timeSpan.className = 'time';
-                    timeSpan.textContent = new Date(msg.ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-                    
-                    div.appendChild(contentSpan);
-                    div.appendChild(timeSpan);
-                    container.appendChild(avatar);
-                    container.appendChild(div);
-                    chatMessages.appendChild(container);
+                    var contentSpan = document.createElement('span'); contentSpan.className = 'message-text'; contentSpan.textContent = msg.text;
+                    var timeSpan = document.createElement('span'); timeSpan.className = 'time'; timeSpan.textContent = new Date(msg.ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                    div.appendChild(contentSpan); div.appendChild(timeSpan); container.appendChild(avatar); container.appendChild(div); chatMessages.appendChild(container);
                 }
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             } catch(e) {}
         }
 
-        // ================= 核心交互 =================
+        // ================= 核心发送 =================
         function sendMessage() {
-            var msg = userInput.value.trim();
-            if (!msg) return;
-            addMessage(msg, 'user', false);
-            userInput.value = '';
-            setStore('last_chat_time', Date.now().toString());
+            var msg = userInput.value.trim(); if (!msg) return;
+            addMessage(msg, 'user', false); userInput.value = ''; setStore('last_chat_time', Date.now().toString());
 
-            var typing = document.createElement('div');
-            typing.className = 'typing-indicator';
-            typing.innerHTML = '<span></span><span></span><span></span>';
-            chatMessages.appendChild(typing);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            var typing = document.createElement('div'); typing.className = 'typing-indicator'; typing.innerHTML = '<span></span><span></span><span></span>';
+            chatMessages.appendChild(typing); chatMessages.scrollTop = chatMessages.scrollHeight;
 
             var history = [];
             document.querySelectorAll('.message-wrapper').forEach(function(el) {
-                var s = el.classList.contains('user') ? 'user' : 'assistant';
-                var t = el.querySelector('.message-text');
+                var s = el.classList.contains('user') ? 'user' : 'assistant', t = el.querySelector('.message-text');
                 if (t && t.textContent) history.push({ role: s, content: t.textContent });
             });
             var messages = [{ role: 'system', content: CHARACTER_PROMPT }].concat(history.slice(-20));
 
             fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ model: MODEL_NAME, messages: messages, temperature: 0.7, max_tokens: 200 })
-            }).then(function(res) {
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.json();
-            }).then(function(data) {
+            }).then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+            .then(function(data) {
                 typing.remove();
                 var raw = (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content : '...';
                 var parsed = extractMood(raw);
                 addMessage(parsed.text, 'bot', true);
                 if (parsed.mood) updateMoodBar(parsed.mood);
+                checkTriggerMoment(msg); // 检查是否触发朋友圈
             }).catch(function(err) {
-                typing.remove();
-                addMessage('黎深皱了皱眉："信号不太好……"', 'bot', false);
+                typing.remove(); addMessage('黎深皱了皱眉："信号不太好……"', 'bot', false);
             });
         }
 
-        sendButton.onclick = sendMessage;
-        userInput.onkeydown = function(e) { if (e.key === 'Enter') sendMessage(); };
+        // ================= 朋友圈核心逻辑 =================
+        var moments = [];
+        var currentMomentUser = 'lishen'; 
+        var chatTurnCount = 0; // 聊天轮数计数器
 
-        // ================= 弹窗控制 =================
-        var modal = document.getElementById('customModal');
-        var modalTitle = document.getElementById('modalTitle');
-        var modalDesc = document.getElementById('modalDesc');
-        var modalConfirmBtn = document.getElementById('modalConfirmBtn');
-        var currentConfirmAction = null;
-
-        function showModal(title, desc, btnText, callback) {
-            modalTitle.textContent = title;
-            modalDesc.textContent = desc;
-            modalConfirmBtn.textContent = btnText;
-            currentConfirmAction = callback;
-            modal.classList.add('show');
+        function initMoments() {
+            var saved = getStore('moments_data');
+            if (saved) {
+                moments = JSON.parse(saved);
+            } else {
+                moments = [
+                    { id: 'm1', author: 'lishen', content: '今天连做了三台手术，终于结束了。外面的雪很大，你那边冷吗？', time: Date.now() - 86400000, comments: [{ user: 'user', text: '注意休息，别太累了。' }, { user: 'lishen', text: '嗯，听你的。' }] },
+                    { id: 'm2', author: 'lishen', content: '路过那家甜品店，顺手买了一份。不知道你什么时候有空来拿。', time: Date.now() - 172800000, comments: [] }
+                ];
+                saveMomentsData();
+            }
         }
-        function closeModal() { modal.classList.remove('show'); }
-        modalConfirmBtn.onclick = function() {
-            if (currentConfirmAction) currentConfirmAction();
-            closeModal();
-        };
 
-        // ================= 菜单功能 =================
-        function toggleTheme() { document.body.classList.toggle('night-mode'); }
+        function saveMomentsData() { setStore('moments_data', JSON.stringify(moments)); }
 
-        function askSearch() {
-            var kw = prompt('搜索包含哪些字的消息：');
-            if (kw) {
-                var found = 0;
-                document.querySelectorAll('.message-text').forEach(function(el) {
-                    if (el.textContent.indexOf(kw) > -1) {
-                        el.style.background = '#ffe58a';
-                        el.style.color = '#333';
-                        found++;
-                    } else {
-                        el.style.background = 'transparent';
-                        el.style.color = '';
-                    }
+        function openMoments(type) {
+            currentMomentUser = type;
+            document.getElementById('momentsOverlay').classList.add('show');
+            document.getElementById('publishBtn').style.display = type === 'user' ? 'flex' : 'none';
+            
+            var avatarSrc = getStore('custom_avatar') || 'images/lishen.png';
+            var userAvatar = 'images/user.png';
+            document.getElementById('momentsTitle').textContent = type === 'lishen' ? '黎深的朋友圈' : '我的朋友圈';
+            document.getElementById('momentsCoverName').textContent = type === 'lishen' ? '黎深' : '我';
+            document.getElementById('momentsCoverAvatar').src = type === 'lishen' ? avatarSrc : userAvatar;
+            
+            renderMoments();
+        }
+
+        function closeMoments() { document.getElementById('momentsOverlay').classList.remove('show'); }
+
+        function renderMoments() {
+            var list = document.getElementById('momentsList');
+            list.innerHTML = '';
+            var filtered = moments.filter(function(m) {
+                return currentMomentUser === 'lishen' ? m.author === 'lishen' : m.author === 'user';
+            });
+
+            filtered.forEach(function(m) {
+                var div = document.createElement('div');
+                div.className = 'moment-post';
+                var avatarSrc = m.author === 'lishen' ? (getStore('custom_avatar') || 'images/lishen.png') : 'images/user.png';
+                var name = m.author === 'lishen' ? '黎深' : '我';
+                
+                var commentsHtml = '';
+                m.comments.forEach(function(c) {
+                    var cName = c.user === 'lishen' ? '黎深' : '我';
+                    commentsHtml += '<div class="comment-item"><span class="comment-user">' + cName + '：</span>' + c.text + '</div>';
                 });
-                if (found === 0) showModal('未找到', '没有找到包含该词的消息。', '知道了', null);
+
+                div.innerHTML = '<img src="' + avatarSrc + '" class="moment-avatar">' +
+                    '<div class="moment-body">' +
+                        '<div class="moment-name">' + name + '</div>' +
+                        '<div class="moment-text">' + m.content + '</div>' +
+                        '<div class="moment-time">' + formatDate(m.time) + '</div>' +
+                        '<div class="moment-actions">' +
+                            '<button class="moment-btn" onclick="toggleComments(\'' + m.id + '\')">💬 评论</button>' +
+                        '</div>' +
+                        '<div class="moment-comments ' + (m.comments.length > 0 ? 'show' : '') + '" id="comments-' + m.id + '">' +
+                            commentsHtml +
+                            '<div class="comment-input-area">' +
+                                '<input type="text" id="input-' + m.id + '" placeholder="评论..." onkeydown="if(event.key===\'Enter\') addComment(\'' + m.id + '\')">' +
+                                '<button onclick="addComment(\'' + m.id + '\')">发送</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+                list.appendChild(div);
+            });
+        }
+
+        function toggleComments(id) {
+            var el = document.getElementById('comments-' + id);
+            if (el) el.classList.toggle('show');
+        }
+
+        function addComment(momentId) {
+            var input = document.getElementById('input-' + momentId);
+            var text = input.value.trim();
+            if (!text) return;
+            
+            var moment = moments.find(function(m){ return m.id === momentId; });
+            if (!moment) return;
+            
+            moment.comments.push({ user: 'user', text: text });
+            input.value = '';
+            saveMomentsData();
+            renderMoments();
+
+            if (moment.author === 'lishen') {
+                setTimeout(function() { fetchAIComment(moment, text); }, 1500);
             }
         }
 
-        function exportChat() {
-            var text = "";
-            document.querySelectorAll('.message-wrapper').forEach(function(el) {
-                var s = el.classList.contains('user') ? '我' : '黎深';
+        function fetchAIComment(moment, userComment) {
+            var prompt = "系统提示：你现在正在看自己的朋友圈。这条朋友圈的内容是：“" + moment.content + "”。用户评论说：“" + userComment + "”。请用你（黎深）的性格回复她，不超过20字。不需要加 [mood:xxx] 格式。";
+            fetch(API_URL, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 100 })
+            }).then(function(res) { return res.json(); }).then(function(data) {
+                var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '');
+                moment.comments.push({ user: 'lishen', text: reply });
+                saveMomentsData();
+                if (document.getElementById('momentsOverlay').classList.contains('show') && currentMomentUser === 'lishen') renderMoments();
+            }).catch(function(e){});
+        }
+
+        // 智能判断触发朋友圈（CD机制 + 上下文判断）
+        function canPostMoment() {
+            var lastTime = getStore('last_moment_time');
+            if (!lastTime) return true;
+            var diff = Date.now() - parseInt(lastTime);
+            var cooldown = 4 * 60 * 60 * 1000; // 4小时冷却
+            return diff > cooldown;
+        }
+
+        function checkTriggerMoment(userMsg) {
+            chatTurnCount++;
+            if (chatTurnCount < 5) return; // 至少聊5句才评估
+            if (!canPostMoment()) return;  // 冷却期内不发
+            
+            chatTurnCount = 0; // 重置计数
+
+            var historyContext = "";
+            var wrappers = document.querySelectorAll('.message-wrapper');
+            for (var i = Math.max(0, wrappers.length - 6); i < wrappers.length; i++) {
+                var el = wrappers[i];
+                var sender = el.classList.contains('user') ? '我' : '黎深';
                 var t = el.querySelector('.message-text');
-                if (t) text += s + "：" + t.textContent + "\n\n";
-            });
-            var blob = new Blob([text], {type: "text/plain;charset=utf-8"});
-            var a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = "与黎深的对话.txt";
-            a.click();
-        }
-
-        function promptClear() {
-            showModal('清空对话', '确定要清空所有聊天记录吗？他可能会有些失落。', '清空', function() {
-                document.querySelectorAll('.message-wrapper').forEach(function(el){ el.remove(); });
-                document.querySelectorAll('.date-divider').forEach(function(el){ el.remove(); });
-                removeStore('chatHistory');
-                lastDate = '';
-                updateMoodBar('平静');
-                addMessage('你来了。我一直在等你。', 'bot', true);
-            });
-        }
-
-        // ================= 音乐控制 =================
-        var audio = document.getElementById('bgAudio');
-        var recordDisc = document.getElementById('recordDisc');
-        var desktopToggle = document.getElementById('musicToggle');
-        var mobileIcon = document.getElementById('mobileMusicIcon');
-        var musicPlayer = document.getElementById('musicPlayer');
-        var progressSlider = document.getElementById('progressSlider');
-        var timeDisplay = document.getElementById('timeDisplay');
-        var isPlaying = false;
-
-        function formatTime(seconds) {
-            if (isNaN(seconds)) return "0:00";
-            var m = Math.floor(seconds / 60);
-            var s = Math.floor(seconds % 60);
-            return m + ":" + (s < 10 ? '0' : '') + s;
-        }
-
-        function togglePlay() {
-            if (audio.paused) { 
-                audio.play().then(function(){ 
-                    isPlaying = true; 
-                    recordDisc.classList.add('playing'); 
-                    if(desktopToggle) desktopToggle.innerHTML = '<i class="fas fa-pause"></i>'; 
-                }).catch(function(){}); 
-            } else { 
-                audio.pause(); 
-                isPlaying = false; 
-                recordDisc.classList.remove('playing'); 
-                if(desktopToggle) desktopToggle.innerHTML = '<i class="fas fa-play"></i>'; 
+                if (t) historyContext += sender + "：" + t.textContent + "\n";
             }
+
+            var prompt = "你叫黎深，男、27岁，心脏外科医生。你性格沉稳克制，不爱发朋友圈，只有遇到有感触的事、或者对心爱的人的关心产生了情绪波动时，才会偶尔发一条。\n\n" +
+                         "下面是你们刚刚的聊天记录：\n" + historyContext + "\n\n" +
+                         "请基于这段对话，判断你现在是否有必要发一条朋友圈。\n" +
+                         "要求：\n" +
+                         "1. 如果觉得没必要发，或者对话太日常、太无聊，请仅仅回复三个字母：NO。\n" +
+                         "2. 如果觉得有必要发，请直接写出不超过 30 字的朋友圈文案（第一人称，符合你克制、温柔、理智的人设）。\n" +
+                         "3. 不要加引号，不要解释，直接输出文案或 NO。不要带 [mood:xxx] 格式。";
+
+            fetch(API_URL, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.8, max_tokens: 100 })
+            }).then(function(res){ return res.json(); }).then(function(data){
+                var content = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '').trim();
+                
+                if (content.indexOf('NO') === 0 || content === 'No' || content === 'no' || content === '') return;
+
+                moments.unshift({ id: 'm_' + Date.now(), author: 'lishen', content: content, time: Date.now(), comments: [] });
+                saveMomentsData();
+                setStore('last_moment_time', Date.now().toString());
+                
+                if (document.getElementById('momentsOverlay').classList.contains('show') && currentMomentUser === 'lishen') renderMoments();
+                addMessage('（黎深刚刚好像发了一条朋友圈，去他主页看看吧）', 'bot', false);
+            }).catch(function(e){});
         }
+
+        function openPublishModal() { document.getElementById('publishModal').classList.add('show'); }
+        function closePublishModal() { document.getElementById('publishModal').classList.remove('show'); }
         
-        desktopToggle.onclick = togglePlay;
-        
-        // 手机端展开/收起音乐播放器
-        mobileIcon.onclick = function(e) {
-            e.stopPropagation();
-            musicPlayer.classList.toggle('expanded');
-        };
-
-        // 收起 / 关闭音乐
-        document.getElementById('musicMinimize').onclick = function(e) {
-            e.stopPropagation();
-            if (window.innerWidth <= 640) {
-                musicPlayer.classList.remove('expanded');
-            } else {
-                musicPlayer.style.display = 'none';
-            }
-        };
-
-        // 菜单重新打开音乐
-        function toggleMusicPlayer() {
-            if (window.innerWidth <= 640) {
-                musicPlayer.classList.toggle('expanded');
-            } else {
-                musicPlayer.style.display = musicPlayer.style.display === 'none' ? 'block' : 'none';
-            }
+        function submitMoment() {
+            var text = document.getElementById('publishText').value.trim();
+            if (!text) return;
+            
+            var newMoment = { id: 'm_' + Date.now(), author: 'user', content: text, time: Date.now(), comments: [] };
+            moments.unshift(newMoment);
+            saveMomentsData();
+            document.getElementById('publishText').value = '';
+            closePublishModal();
+            renderMoments();
+            
+            setTimeout(function() {
+                var prompt = "系统提示：用户发了一条朋友圈：“" + text + "”。请用你（黎深）的性格回复她，不超过20字。不需要加 [mood:xxx] 格式。";
+                fetch(API_URL, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 100 })
+                }).then(function(res){ return res.json(); }).then(function(data){
+                    var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '');
+                    newMoment.comments.push({ user: 'lishen', text: reply });
+                    saveMomentsData();
+                    if (document.getElementById('momentsOverlay').classList.contains('show') && currentMomentUser === 'user') renderMoments();
+                }).catch(function(){});
+            }, 2500);
         }
 
-        // 进度条与时间显示
-        audio.ontimeupdate = function() {
-            if (audio.duration) {
-                progressSlider.value = audio.currentTime / audio.duration;
-                timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
-            }
-        };
-        audio.onloadedmetadata = function() {
-            timeDisplay.textContent = "0:00 / " + formatTime(audio.duration);
-        };
-        progressSlider.oninput = function() {
-            if (audio.duration) audio.currentTime = parseFloat(this.value) * audio.duration;
-        };
-
-        // ================= 菜单面板 =================
-        var menuBtn = document.getElementById('menuBtn');
-        var dropdown = document.getElementById('dropdownMenu');
-        menuBtn.onclick = function(e) {
-            e.stopPropagation();
-            var rect = menuBtn.getBoundingClientRect();
-            dropdown.style.left = (rect.left + rect.width - 140) + 'px';
-            dropdown.style.top = (rect.bottom + 10) + 'px';
-            dropdown.classList.toggle('show');
-        };
-        document.addEventListener('click', function(e) { 
-            if (!dropdown.contains(e.target) && e.target !== menuBtn) {
-                dropdown.classList.remove('show'); 
-            }
-            if (!e.target.closest('.message')) {
-                document.querySelectorAll('.message').forEach(function(m){ m.classList.remove('active'); });
-            }
-        });
-
-        // ================= 特效与拖拽 =================
-        function initEffects() {
-            var layer = document.getElementById('snowLayer');
-            if (layer) {
-                var flakes = ['❄', '❅', '❆', '✦'];
-                var count = window.innerWidth < 640 ? 30 : 60;
-                for (var i = 0; i < count; i++) {
-                    var el = document.createElement('span');
-                    el.className = 'flake';
-                    el.textContent = flakes[Math.floor(Math.random() * flakes.length)];
-                    var size = 8 + Math.random() * 16;
-                    el.style.fontSize = size + 'px';
-                    el.style.left = Math.random() * 100 + '%';
-                    el.style.opacity = 0.3 + Math.random() * 0.5;
-                    el.style.animationDuration = (14 + Math.random() * 22) + 's';
-                    el.style.animationDelay = Math.random() * 20 + 's';
-                    layer.appendChild(el);
-                }
-            }
-            var aurora = document.getElementById('auroraLayer');
-            if (aurora) setTimeout(function() { aurora.classList.add('show'); }, 800);
-        }
-
+        // ================= 交互与拖拽 =================
         function bindPetEvents() {
-            var pet = document.getElementById('desktopPet');
-            var bubble = document.getElementById('petBubble');
-            if (pet && bubble) {
-                var quotes = ['又在发呆？', '嗯，我在。', '手凉不凉？', '今天手术顺利。', '想听冷笑话吗？', '你来了。', '别熬夜。', '雪很大，记得加衣。', '……我在呢。'];
-                var bubbleTimeout = null;
-                pet.onclick = function(e) {
-                    if (pet._wasDragged) { pet._wasDragged = false; return; }
-                    e.stopPropagation();
-                    bubble.textContent = quotes[Math.floor(Math.random() * quotes.length)];
-                    bubble.classList.add('show');
-                    clearTimeout(bubbleTimeout);
-                    bubbleTimeout = setTimeout(function() { bubble.classList.remove('show'); }, 2500);
-                };
-            }
+            var pet = document.getElementById('desktopPet'), bubble = document.getElementById('petBubble');
+            if (!pet || !bubble) return;
+            var quotes = ['又在发呆？', '嗯，我在。', '手凉不凉？', '今天手术顺利。', '想听冷笑话吗？', '你来了。', '别熬夜。', '雪很大，记得加衣。', '……我在呢。'];
+            var bubbleTimeout = null;
+            
+            pet.addEventListener('click', function(e) {
+                if (pet._wasDragged) { pet._wasDragged = false; return; }
+                e.stopPropagation();
+                bubble.textContent = quotes[Math.floor(Math.random() * quotes.length)];
+                bubble.classList.add('show');
+                clearTimeout(bubbleTimeout);
+                bubbleTimeout = setTimeout(function() { bubble.classList.remove('show'); }, 2500);
+            });
         }
 
-        // 手机+电脑终极兼容拖拽逻辑
         function makeDraggable(element) {
             if (!element) return;
-            var startX = 0, startY = 0, origX = 0, origY = 0;
-            var isDragging = false;
+            var startX = 0, startY = 0, origX = 0, origY = 0, isDragging = false;
 
-            // 手机触摸事件
             element.addEventListener('touchstart', function(e) {
                 if (e.target.closest('button') || e.target.closest('input')) return;
                 var touch = e.touches[0];
-                startX = touch.clientX;
-                startY = touch.clientY;
-                var rect = element.getBoundingClientRect();
-                origX = rect.left;
-                origY = rect.top;
-                isDragging = true;
-                element._wasDragged = false;
-                if (e.cancelable) e.preventDefault(); // 阻止页面滚动
-            }, { passive: false });
+                startX = touch.clientX; startY = touch.clientY;
+                var rect = element.getBoundingClientRect(); origX = rect.left; origY = rect.top;
+                isDragging = true; element._wasDragged = false;
+            }, { passive: true });
 
             element.addEventListener('touchmove', function(e) {
                 if (!isDragging) return;
-                var touch = e.touches[0];
-                var dx = touch.clientX - startX;
-                var dy = touch.clientY - startY;
-                
+                var touch = e.touches[0], dx = touch.clientX - startX, dy = touch.clientY - startY;
                 if (Math.abs(dx) > 5 || Math.abs(dy) > 5) element._wasDragged = true;
-                
                 element.style.position = 'fixed';
-                element.style.left = (origX + dx) + 'px';
-                element.style.top = (origY + dy) + 'px';
-                element.style.bottom = 'auto';
-                element.style.right = 'auto';
+                element.style.left = (origX + dx) + 'px'; element.style.top = (origY + dy) + 'px';
+                element.style.bottom = 'auto'; element.style.right = 'auto';
                 if (e.cancelable) e.preventDefault();
             }, { passive: false });
 
-            element.addEventListener('touchend', function() {
-                isDragging = false;
-            });
+            element.addEventListener('touchend', function() { isDragging = false; });
             
-            // 电脑鼠标事件
             element.addEventListener('mousedown', function(e) {
                 if (e.target.closest('button') || e.target.closest('input')) return;
-                startX = e.clientX;
-                startY = e.clientY;
-                var rect = element.getBoundingClientRect();
-                origX = rect.left;
-                origY = rect.top;
-                isDragging = true;
-                element._wasDragged = false;
+                startX = e.clientX; startY = e.clientY;
+                var rect = element.getBoundingClientRect(); origX = rect.left; origY = rect.top;
+                isDragging = true; element._wasDragged = false;
                 e.preventDefault();
             });
             
             document.addEventListener('mousemove', function(e) {
                 if (!isDragging) return;
-                var dx = e.clientX - startX;
-                var dy = e.clientY - startY;
+                var dx = e.clientX - startX, dy = e.clientY - startY;
                 if (Math.abs(dx) > 5 || Math.abs(dy) > 5) element._wasDragged = true;
-                
                 element.style.position = 'fixed';
-                element.style.left = (origX + dx) + 'px';
-                element.style.top = (origY + dy) + 'px';
-                element.style.bottom = 'auto';
-                element.style.right = 'auto';
+                element.style.left = (origX + dx) + 'px'; element.style.top = (origY + dy) + 'px';
+                element.style.bottom = 'auto'; element.style.right = 'auto';
             });
-            
-            document.addEventListener('mouseup', function() {
-                isDragging = false;
+            document.addEventListener('mouseup', function() { isDragging = false; });
+        }
+
+        // ================= 弹窗与菜单 =================
+        var modal = document.getElementById('customModal');
+        var modalTitle = document.getElementById('modalTitle'), modalDesc = document.getElementById('modalDesc'), modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        var currentConfirmAction = null;
+        function showModal(title, desc, btnText, callback) { modalTitle.textContent = title; modalDesc.textContent = desc; modalConfirmBtn.textContent = btnText; currentConfirmAction = callback; modal.classList.add('show'); }
+        function closeModal() { modal.classList.remove('show'); }
+        modalConfirmBtn.onclick = function() { if (currentConfirmAction) currentConfirmAction(); closeModal(); };
+
+        function toggleTheme() { document.body.classList.toggle('night-mode'); }
+        function exportChat() {
+            var text = "";
+            document.querySelectorAll('.message-wrapper').forEach(function(el) {
+                var s = el.classList.contains('user') ? '我' : '黎深', t = el.querySelector('.message-text');
+                if (t) text += s + "：" + t.textContent + "\n\n";
+            });
+            var blob = new Blob([text], {type: "text/plain;charset=utf-8"}), a = document.createElement("a");
+            a.href = URL.createObjectURL(blob); a.download = "与黎深的对话.txt"; a.click();
+        }
+        function promptClear() {
+            showModal('清空对话', '确定要清空所有聊天记录吗？他可能会有些失落。', '清空', function() {
+                document.querySelectorAll('.message-wrapper').forEach(function(el){ el.remove(); });
+                document.querySelectorAll('.date-divider').forEach(function(el){ el.remove(); });
+                removeStore('chatHistory'); lastDate = ''; updateMoodBar('平静'); addMessage('你来了。我一直在等你。', 'bot', true);
             });
         }
 
+        var menuBtn = document.getElementById('menuBtn'), dropdown = document.getElementById('dropdownMenu');
+        menuBtn.onclick = function(e) {
+            e.stopPropagation(); var rect = menuBtn.getBoundingClientRect();
+            dropdown.style.left = (rect.left + rect.width - 140) + 'px'; dropdown.style.top = (rect.bottom + 10) + 'px';
+            dropdown.classList.toggle('show');
+        };
+        document.addEventListener('click', function(e) { 
+            if (!dropdown.contains(e.target) && e.target !== menuBtn) dropdown.classList.remove('show'); 
+            if (!e.target.closest('.message')) document.querySelectorAll('.message').forEach(function(m){ m.classList.remove('active'); });
+        });
+
+        // 音乐控制
+        var audio = document.getElementById('bgAudio'), recordDisc = document.getElementById('recordDisc'), desktopToggle = document.getElementById('musicToggle');
+        var mobileIcon = document.getElementById('mobileMusicIcon'), musicPlayer = document.getElementById('musicPlayer'), progressSlider = document.getElementById('progressSlider'), timeDisplay = document.getElementById('timeDisplay');
+        
+        function formatTime(seconds) { if (isNaN(seconds)) return "0:00"; var m = Math.floor(seconds / 60), s = Math.floor(seconds % 60); return m + ":" + (s < 10 ? '0' : '') + s; }
+        function togglePlay() {
+            if (audio.paused) { audio.play().then(function(){ recordDisc.classList.add('playing'); desktopToggle.innerHTML = '<i class="fas fa-pause"></i>'; }).catch(function(){}); } 
+            else { audio.pause(); recordDisc.classList.remove('playing'); desktopToggle.innerHTML = '<i class="fas fa-play"></i>'; }
+        }
+        desktopToggle.onclick = togglePlay;
+        mobileIcon.onclick = function(e) { e.stopPropagation(); musicPlayer.classList.toggle('expanded'); };
+        document.getElementById('musicMinimize').onclick = function(e) { e.stopPropagation(); if (window.innerWidth <= 640) musicPlayer.classList.remove('expanded'); else musicPlayer.style.display = 'none'; };
+        function toggleMusicPlayer() { if (window.innerWidth <= 640) musicPlayer.classList.toggle('expanded'); else musicPlayer.style.display = musicPlayer.style.display === 'none' ? 'block' : 'none'; }
+        audio.ontimeupdate = function() { if (audio.duration) { progressSlider.value = audio.currentTime / audio.duration; timeDisplay.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration); } };
+        audio.onloadedmetadata = function() { timeDisplay.textContent = "0:00 / " + formatTime(audio.duration); };
+        progressSlider.oninput = function() { if (audio.duration) audio.currentTime = parseFloat(this.value) * audio.duration; };
+
         // ================= 启动 =================
         window.onload = function() {
-            loadImages();
-            initEffects();
-            loadMessages();
-            updateMoodBar(getStore('lishen_last_mood') || '平静');
+            loadImages(); initMoments(); loadMessages(); updateMoodBar(getStore('lishen_last_mood') || '平静');
             var last = getStore('last_chat_time');
-            if (!last || (Date.now() - parseInt(last) > 10 * 60 * 1000)) {
-                addMessage('你来了。我一直在等你。', 'bot', true);
+            if (!last || (Date.now() - parseInt(last) > 10 * 60 * 1000)) addMessage('你来了。我一直在等你。', 'bot', true);
+
+            var layer = document.getElementById('snowLayer');
+            if (layer) {
+                var flakes = ['❄', '❅', '❆', '✦'];
+                for (var i = 0; i < 40; i++) {
+                    var el = document.createElement('span'); el.className = 'flake'; el.textContent = flakes[Math.floor(Math.random() * 4)];
+                    el.style.fontSize = (8 + Math.random() * 16) + 'px'; el.style.left = Math.random() * 100 + '%';
+                    el.style.opacity = 0.3 + Math.random() * 0.5; el.style.animationDuration = (14 + Math.random() * 22) + 's'; el.style.animationDelay = Math.random() * 20 + 's';
+                    layer.appendChild(el);
+                }
             }
-            
-            // 初始位置
-            var pet = document.getElementById('desktopPet');
-            var container = document.querySelector('.chat-container');
+
+            var pet = document.getElementById('desktopPet'), container = document.querySelector('.chat-container');
             if (pet && container) {
                 var rect = container.getBoundingClientRect();
-                pet.style.left = (rect.right - 220) + 'px';
-                pet.style.top = (rect.bottom - 220) + 'px';
+                pet.style.left = (rect.right - 220) + 'px'; pet.style.top = (rect.bottom - 220) + 'px';
                 makeDraggable(pet);
             }
+            makeDraggable(musicPlayer);
             
-            makeDraggable(document.getElementById('musicPlayer'));
+            document.getElementById('sendButton').onclick = sendMessage;
+            document.getElementById('userInput').onkeydown = function(e) { if (e.key === 'Enter') sendMessage(); };
         };
     </script>
 </body>
