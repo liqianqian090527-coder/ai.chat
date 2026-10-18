@@ -120,7 +120,7 @@
         .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); cursor: pointer; }
         .time-display { font-size: 11px; color: var(--text-main); opacity: 0.7; margin-top: 4px; }
 
-        /* ===== 弹窗 & 菜单 ===== */
+        /* ===== 弹窗 & 菜单 & 自定义面板 ===== */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); z-index: 10000; display: none; align-items: center; justify-content: center; }
         .modal-overlay.show { display: flex; }
         .modal-box { background: #fff; border-radius: 20px; padding: 24px; width: 300px; max-width: 90vw; text-align: center; }
@@ -135,6 +135,17 @@
         .dropdown-menu.show { display: block; }
         .dropdown-menu .menu-item { padding: 10px 14px; font-size: 13px; color: var(--text-main); border: none; background: none; width: 100%; text-align: left; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
         .dropdown-menu .menu-item:hover { background: rgba(74,144,226,0.1); color: var(--primary); }
+
+        /* 自定义面板 */
+        .custom-panel { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 99999; display: none; align-items: center; justify-content: center; }
+        .custom-panel.show { display: flex; }
+        .custom-box { background: #fff; border-radius: 20px; padding: 20px; width: 320px; max-width: 90vw; }
+        .custom-title { text-align: center; font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); }
+        .custom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .custom-item { background: #f7f7f7; border-radius: 12px; padding: 16px 10px; text-align: center; cursor: pointer; transition: 0.2s; border: 1px solid #eee; }
+        .custom-item:hover { background: #eef2f9; border-color: var(--primary-light); }
+        .custom-item i { font-size: 24px; color: var(--primary); margin-bottom: 8px; display: block; }
+        .custom-item span { font-size: 13px; color: #555; font-weight: 500; }
 
         /* ===== 桌面宠物 ===== */
         .desktop-pet { position: fixed; z-index: 999; width: 200px; height: 200px; border-radius: 50%; cursor: grab; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: none; }
@@ -210,7 +221,6 @@
             .music-player.expanded .time-display { font-size: 10px; }
             .mobile-music-icon { display: flex; font-size: 20px; color: var(--primary); width: 100%; height: 100%; align-items: center; justify-content: center; }
             .music-player.expanded .mobile-music-icon { display: none; }
-            .nav-info { margin-right: 10px; }
         }
         @media (min-width: 641px) { .mobile-music-icon { display: none; } }
     </style>
@@ -218,6 +228,7 @@
 <body>
     <div class="toast-box" id="toastBox"><i class="fas fa-info-circle"></i> <span id="toastMsg"></span></div>
 
+    <!-- 隐藏的上传控件 -->
     <input type="file" id="bgUpload" accept="image/*" style="display: none;">
     <input type="file" id="avatarLishenUpload" accept="image/*" style="display: none;">
     <input type="file" id="avatarUserUpload" accept="image/*" style="display: none;">
@@ -229,6 +240,7 @@
     <!-- 聊天主界面 -->
     <div class="chat-container">
         <div class="chat-nav">
+            <!-- 点击顶部黎深头像进他主页 -->
             <div class="nav-avatar" id="navAvatarBox" onclick="openMoments('lishen')"></div>
             <div class="nav-info" onclick="openMoments('lishen')">
                 <div class="nav-name">黎深</div>
@@ -238,10 +250,9 @@
                 </div>
             </div>
             <div class="nav-btn-group">
-                <!-- 发现页（混排） -->
+                <!-- 发现页按钮 -->
                 <button class="nav-icon-btn" onclick="openMoments('discover')" title="朋友圈"><i class="fas fa-compass"></i></button>
-                <!-- 我的头像进我的个人主页 -->
-                <div class="nav-avatar" id="userNavAvatar" onclick="openMoments('user')" style="width: 36px; height: 36px; font-size: 16px;"></div>
+                <!-- 菜单按钮 -->
                 <button class="nav-icon-btn" id="menuBtn">☰</button>
             </div>
         </div>
@@ -256,17 +267,36 @@
 
     <!-- 下拉菜单 -->
     <div class="dropdown-menu" id="dropdownMenu">
+        <button class="menu-item" onclick="openCustomPanel()"><i class="fas fa-palette"></i> 自定义</button>
         <button class="menu-item" onclick="toggleMusicPlayer()"><i class="fas fa-music"></i> 显示音乐</button>
-        <button class="menu-item" onclick="triggerBgUpload()"><i class="fas fa-image"></i> 聊天背景</button>
-        <button class="menu-item" onclick="triggerAvatarLishen()"><i class="fas fa-user-circle"></i> 黎深头像</button>
-        <button class="menu-item" onclick="triggerAvatarUser()"><i class="fas fa-user"></i> 我的头像</button>
-        <button class="menu-item" onclick="triggerPetUpload()"><i class="fas fa-child"></i> 桌面小人</button>
         <button class="menu-item" onclick="exportChat()"><i class="fas fa-download"></i> 导出对话</button>
         <button class="menu-item" onclick="toggleTheme()"><i class="fas fa-moon"></i> 夜间模式</button>
         <button class="menu-item" onclick="promptClear()" style="color: #e74c3c;"><i class="fas fa-trash-alt"></i> 清空全部</button>
     </div>
 
-    <!-- 自定义弹窗 -->
+    <!-- 自定义面板 -->
+    <div class="custom-panel" id="customPanel">
+        <div class="custom-box">
+            <div class="custom-title">自定义设置</div>
+            <div class="custom-grid">
+                <div class="custom-item" onclick="triggerAvatarLishen()">
+                    <i class="fas fa-user-circle"></i><span>黎深头像</span>
+                </div>
+                <div class="custom-item" onclick="triggerAvatarUser()">
+                    <i class="fas fa-user"></i><span>我的头像</span>
+                </div>
+                <div class="custom-item" onclick="triggerPetUpload()">
+                    <i class="fas fa-child"></i><span>桌面陪伴</span>
+                </div>
+                <div class="custom-item" onclick="triggerBgUpload()">
+                    <i class="fas fa-image"></i><span>聊天背景</span>
+                </div>
+            </div>
+            <button class="modal-btn cancel" style="margin-top: 16px; width: 100%;" onclick="closeCustomPanel()">取消</button>
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
     <div class="modal-overlay" id="customModal">
         <div class="modal-box">
             <div class="modal-title" id="modalTitle">提示</div>
@@ -360,6 +390,13 @@
             toastTimeout = setTimeout(function() { toast.classList.remove('show'); }, 3000);
         }
 
+        // ================= 自定义面板控制 =================
+        function openCustomPanel() { 
+            document.getElementById('customPanel').classList.add('show');
+            dropdown.classList.remove('show');
+        }
+        function closeCustomPanel() { document.getElementById('customPanel').classList.remove('show'); }
+
         // ================= 头像与背景独立管理 =================
         var bgUpload = document.getElementById('bgUpload');
         var avatarLishenUpload = document.getElementById('avatarLishenUpload');
@@ -367,29 +404,21 @@
         var petUpload = document.getElementById('petUpload');
         
         var navAvatarBox = document.getElementById('navAvatarBox');
-        var userNavAvatar = document.getElementById('userNavAvatar');
         var desktopPet = document.getElementById('desktopPet');
         
         function loadImages() {
-            // 1. 聊天背景
             var savedBg = getStore('custom_bg');
             document.body.style.backgroundImage = savedBg ? 'url(' + savedBg + ')' : 'url(images/bg.jpg)';
             
-            // 2. 黎深头像
             var avatarSrcL = getStore('custom_avatar_lishen') || 'images/lishen.png';
             navAvatarBox.innerHTML = '<img src="' + avatarSrcL + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'❄️\'; this.parentElement.style.display=\'flex\'; this.parentElement.style.alignItems=\'center\'; this.parentElement.style.justifyContent=\'center\';">';
             
-            // 3. 我的头像
-            var avatarSrcU = getStore('custom_avatar_user') || 'images/user.png';
-            userNavAvatar.innerHTML = '<img src="' + avatarSrcU + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'👤\'; this.parentElement.style.display=\'flex\'; this.parentElement.style.alignItems=\'center\'; this.parentElement.style.justifyContent=\'center\';">';
-            
-            // 4. Q版小人
             var petSrc = getStore('custom_pet') || 'images/lishen_q.png';
             desktopPet.innerHTML = '<img src="' + petSrc + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'黎\'; this.parentElement.style.fontSize=\'100px\'; this.parentElement.style.opacity=\'0.2\';">' + '<div class="pet-bubble" id="petBubble"></div>';
             bindPetEvents();
         }
 
-        function triggerBgUpload() { bgUpload.click(); }
+        function triggerBgUpload() { closeCustomPanel(); bgUpload.click(); }
         bgUpload.onchange = function(e) {
             var file = e.target.files[0]; if (!file) return;
             var reader = new FileReader();
@@ -397,7 +426,7 @@
             reader.readAsDataURL(file);
         };
 
-        function triggerAvatarLishen() { avatarLishenUpload.click(); }
+        function triggerAvatarLishen() { closeCustomPanel(); avatarLishenUpload.click(); }
         avatarLishenUpload.onchange = function(e) {
             var file = e.target.files[0]; if (!file) return;
             var reader = new FileReader();
@@ -409,7 +438,7 @@
             reader.readAsDataURL(file);
         };
 
-        function triggerAvatarUser() { avatarUserUpload.click(); }
+        function triggerAvatarUser() { closeCustomPanel(); avatarUserUpload.click(); }
         avatarUserUpload.onchange = function(e) {
             var file = e.target.files[0]; if (!file) return;
             var reader = new FileReader();
@@ -421,7 +450,7 @@
             reader.readAsDataURL(file);
         };
 
-        function triggerPetUpload() { petUpload.click(); }
+        function triggerPetUpload() { closeCustomPanel(); petUpload.click(); }
         petUpload.onchange = function(e) {
             var file = e.target.files[0]; if (!file) return;
             var reader = new FileReader();
@@ -622,19 +651,17 @@
         var moments = [];
         var currentView = 'discover'; // 'lishen' | 'user' | 'discover'
         var chatTurnCount = 0; 
-        var commentQueue = []; 
-        var isProcessingQueue = false;
 
         function initMoments() {
             var savedVersion = getStore('moments_version');
             var saved = getStore('moments_data');
             
-            if (savedVersion !== 'v4' || !saved) {
+            if (savedVersion !== 'v5' || !saved) {
                 moments = [
                     { id: 'm1', author: 'lishen', content: '今天连做了三台手术，终于结束了。外面的雪很大。', time: Date.now() - 86400000, comments: [] }
                 ];
                 saveMomentsData();
-                setStore('moments_version', 'v4');
+                setStore('moments_version', 'v5');
             } else {
                 moments = JSON.parse(saved);
             }
@@ -642,7 +669,6 @@
 
         function saveMomentsData() { setStore('moments_data', JSON.stringify(moments)); }
 
-        // 统一入口：'discover' / 'lishen' / 'user'
         function openMoments(view) {
             currentView = view;
             document.getElementById('momentsOverlay').classList.add('show');
@@ -662,22 +688,21 @@
                 coverImg.src = 'images/bg4.jpg'; 
                 coverName.textContent = '黎深';
                 coverAvatar.src = getStore('custom_avatar_lishen') || 'images/lishen.png';
-                publishBtn.style.display = 'none'; // 黎深的主页不能发动态
+                publishBtn.style.display = 'none';
                 document.getElementById('wxCover').onclick = null;
             } else if (currentView === 'user') {
                 titleEl.textContent = '我的朋友圈';
                 coverImg.src = getStore('moment_bg_user') || 'images/bg.jpg';
                 coverName.textContent = '我';
                 coverAvatar.src = getStore('custom_avatar_user') || 'images/user.png';
-                publishBtn.style.display = 'block'; // 我的主页可以发
+                publishBtn.style.display = 'block';
                 bindCoverClick();
             } else {
-                // 发现页（混排）
                 titleEl.textContent = '发现';
                 coverImg.src = getStore('moment_bg_user') || 'images/bg.jpg';
                 coverName.textContent = '我';
                 coverAvatar.src = getStore('custom_avatar_user') || 'images/user.png';
-                publishBtn.style.display = 'block'; // 发现页也可以发
+                publishBtn.style.display = 'block';
                 bindCoverClick();
             }
         }
@@ -702,7 +727,6 @@
 
         function renderMoments() {
             var list = document.getElementById('momentsList');
-            // 记录当前滚动位置
             var scrollTop = list.parentNode.scrollTop;
             
             list.innerHTML = '';
@@ -760,7 +784,6 @@
                 list.appendChild(div);
             });
             
-            // 恢复滚动位置，绝不跳回顶部
             list.parentNode.scrollTop = scrollTop;
         }
 
@@ -782,7 +805,6 @@
             moment.comments.push({ user: 'user', text: text });
             input.value = '';
             
-            // 如果是黎深的朋友圈，立刻显示“正在输入...”
             if (moment.author === 'lishen') {
                 moment.comments.push({ user: 'lishen', text: '', isTyping: true });
             }
@@ -795,7 +817,7 @@
             }
         }
 
-        // ================= AI 评论与队列 =================
+        // ================= AI 评论与独立错峰触发 =================
         var NPC_PROMPTS = {
             'guanxuan': '你是关轩，Akso医院心外科医生，黎深的助手。性格活泼开朗，说话直来直去。用第一人称“我”。针对朋友圈内容回复，不超过25字。',
             'xiaoyuan': '你是小袁，本名袁晴，Akso医院护士。爱磕CP，说话活泼有闺蜜感。用第一人称“我”。针对朋友圈内容回复，不超过20字。',
@@ -823,7 +845,6 @@
             }).then(function(data) {
                 var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '').replace(/^["']|["']$/g, '');
                 
-                // 移除占位符
                 if (isLishen) {
                     moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
                 }
@@ -835,7 +856,6 @@
                 saveMomentsData();
                 if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
             }).catch(function(e) {
-                // 失败时清理占位符并提示
                 if (isLishen) {
                     moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
                     saveMomentsData();
@@ -845,32 +865,19 @@
             });
         }
 
-        function processQueue() {
-            if (isProcessingQueue || commentQueue.length === 0) return;
-            isProcessingQueue = true;
-            
-            var task = commentQueue.shift();
-            var moment = moments.find(function(m){ return m.id === task.momentId; });
-            
-            if (moment) {
-                fetchAIComment(moment, task.role, null);
-            }
-            
-            setTimeout(function() {
-                isProcessingQueue = false;
-                processQueue();
-            }, 2000);
-        }
-
+        // 独立错峰触发，不再使用队列
         function triggerNPComments(momentId) {
-            commentQueue.push({ momentId: momentId, role: 'guanxuan' });
-            commentQueue.push({ momentId: momentId, role: 'xiaoyuan' });
+            var moment = moments.find(function(m){ return m.id === momentId; });
+            if (!moment) return;
+
+            // 关轩 3-5秒后
+            setTimeout(function() { fetchAIComment(moment, 'guanxuan', null); }, 3000 + Math.random()*2000);
+            // 小袁 5-8秒后
+            setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null); }, 5000 + Math.random()*3000);
             
-            if (Math.random() < 0.5) commentQueue.push({ momentId: momentId, role: 'fang' });
-            if (Math.random() < 0.5) commentQueue.push({ momentId: momentId, role: 'shubai' });
-            
-            commentQueue.sort(function() { return Math.random() - 0.5; });
-            processQueue();
+            // 随机掉落 方院长 / 疏白
+            if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'fang', null); }, 8000 + Math.random()*3000);
+            if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'shubai', null); }, 10000 + Math.random()*4000);
         }
 
         // 用户发朋友圈
@@ -887,7 +894,6 @@
             document.getElementById('publishText').value = '';
             closePublishModal();
             
-            // 发完强制跳到发现页，让你看到自己发的
             currentView = 'discover';
             updateMomentsUI();
             renderMoments();
@@ -937,7 +943,6 @@
                 if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
                 addMessage('（黎深刚刚发了一条朋友圈）', 'bot', false);
                 
-                // 黎深发朋友圈时，触发共友评论
                 triggerNPComments(newMomentId);
                 
             }).catch(function(e){});
