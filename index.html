@@ -176,9 +176,12 @@
         
         .wx-comments-box { background: var(--wx-comment-bg); border-radius: 4px; padding: 8px 12px; font-size: 14px; display: none; position: relative; margin-top: 0; border-top: 1px solid #e5e5e5; }
         .wx-comments-box.show { display: block; }
-        .wx-comment-item { padding: 3px 0; line-height: 1.4; word-wrap: break-word; }
-        .wx-comment-user { color: var(--wx-name); font-weight: 600; cursor: pointer; }
-        .wx-comment-typing { color: #999; font-style: italic; }
+        
+        /* 评论项：支持点击回复 */
+        .wx-comment-item { padding: 4px 0; line-height: 1.4; word-wrap: break-word; cursor: pointer; border-radius: 4px; transition: background 0.2s; }
+        .wx-comment-item:hover { background: #ebebeb; }
+        .wx-comment-user { color: var(--wx-name); font-weight: 600; }
+        .wx-comment-typing { color: #999; font-style: italic; cursor: default; }
         
         .wx-input-bar { display: none; background: #f7f7f7; padding: 8px; border-radius: 4px; margin-top: 6px; gap: 8px; }
         .wx-input-bar.show { display: flex; }
@@ -622,7 +625,7 @@
         var moments = [];
         var currentView = 'discover'; 
         var chatTurnCount = 0; 
-        var editingMomentId = null; // 用于编辑朋友圈
+        var editingMomentId = null;
 
         function initMoments() {
             var saved = getStore('moments_data');
@@ -739,12 +742,18 @@
                     if (c.isTyping) {
                         commentsHtml += '<div class="wx-comment-item wx-comment-typing">' + getNPCName(c.user) + '正在输入...</div>';
                     } else {
-                        var nameOnclick = c.user === 'lishen' ? 'onclick="openMoments(\'lishen\')"' : (c.user === 'user' ? 'onclick="openMoments(\'user\')"' : '');
-                        commentsHtml += '<div class="wx-comment-item"><span class="wx-comment-user" ' + nameOnclick + '>' + getNPCName(c.user) + '</span>：' + c.text + '</div>';
+                        // 处理被回复的对象
+                        var displayName = getNPCName(c.user);
+                        if (c.replyTo) {
+                            displayName += ' 回复 ' + getNPCName(c.replyTo);
+                        }
+                        // 点击评论触发回复
+                        var onclickAction = c.user !== 'user' ? 'onclick="event.stopPropagation(); triggerReply(\'' + m.id + '\', \'' + c.user + '\')"' : '';
+                        
+                        commentsHtml += '<div class="wx-comment-item" ' + onclickAction + '><span class="wx-comment-user">' + displayName + '</span>：' + c.text + '</div>';
                     }
                 });
 
-                // 渲染点赞
                 var likesHtml = '';
                 if (m.likes && m.likes.length > 0) {
                     var likeNames = m.likes.map(function(u) { return '<span class="wx-like-user">' + getNPCName(u) + '</span>'; }).join('');
@@ -753,7 +762,6 @@
 
                 var showComments = m.comments.length > 0;
 
-                // 按钮区（点赞、评论、编辑）
                 var hasLiked = m.likes && m.likes.indexOf('user') > -1;
                 var likeBtnClass = hasLiked ? 'wx-action-btn liked' : 'wx-action-btn';
                 var likeIcon = hasLiked ? '<i class="fas fa-heart"></i> 已赞' : '<i class="far fa-heart"></i> 赞';
@@ -788,7 +796,16 @@
             list.parentNode.scrollTop = scrollTop;
         }
 
-        // 点赞功能
+        // 指定回复对象
+        function triggerReply(momentId, targetUser) {
+            var bar = document.getElementById('input-bar-' + momentId);
+            bar.classList.add('show');
+            var input = document.getElementById('input-' + momentId);
+            input.dataset.replyTo = targetUser; // 记录回复目标
+            input.placeholder = '回复 ' + getNPCName(targetUser) + '：';
+            input.focus();
+        }
+
         function toggleLike(momentId) {
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
@@ -796,9 +813,9 @@
             
             var idx = moment.likes.indexOf('user');
             if (idx > -1) {
-                moment.likes.splice(idx, 1); // 取消赞
+                moment.likes.splice(idx, 1);
             } else {
-                moment.likes.push('user'); // 点赞
+                moment.likes.push('user');
             }
             saveMomentsData();
             renderMoments();
@@ -806,9 +823,15 @@
 
         function toggleCommentInput(id) {
             var el = document.getElementById('input-bar-' + id);
-            if (el) el.classList.toggle('show');
             var input = document.getElementById('input-' + id);
-            if (input && el.classList.contains('show')) input.focus();
+            if (el.classList.contains('show')) {
+                el.classList.remove('show');
+            } else {
+                el.classList.add('show');
+                input.dataset.replyTo = ""; // 清空回复目标
+                input.placeholder = "评论...";
+                input.focus();
+            }
         }
 
         function addComment(momentId) {
@@ -819,19 +842,31 @@
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
             
-            moment.comments.push({ user: 'user', text: text });
-            input.value = '';
+            var replyTo = input.dataset.replyTo || null;
             
-            if (moment.author === 'lishen') {
+            moment.comments.push({ user: 'user', text: text, replyTo: replyTo });
+            input.value = '';
+            input.dataset.replyTo = ""; // 清空
+            
+            // 如果直接评论黎深的朋友圈，或者回复了黎深，则显示占位符
+            if (moment.author === 'lishen' || replyTo === 'lishen') {
                 moment.comments.push({ user: 'lishen', text: '', isTyping: true });
+            } else if (replyTo && replyTo !== 'user') {
+                // 如果回复了其他 NPC，显示该 NPC 正在输入
+                moment.comments.push({ user: replyTo, text: '', isTyping: true });
             }
             
             saveMomentsData();
             renderMoments();
 
-            if (moment.author === 'lishen') {
-                setTimeout(function() { fetchAIComment(moment, 'lishen', text); }, 2000);
-            }
+            // 触发 AI 回复
+            setTimeout(function() { 
+                if (replyTo) {
+                    fetchAIComment(moment, replyTo, text, 'reply');
+                } else if (moment.author === 'lishen') {
+                    fetchAIComment(moment, 'lishen', text, 'comment');
+                }
+            }, 2000);
         }
 
         // 编辑朋友圈
@@ -851,18 +886,26 @@
             'shubai': '你是疏白，神秘的小孩，称呼黎深为“黎深叔叔”。带有孩童般的直白与哲理感。用第一人称“我”。针对朋友圈内容回复，不超过20字。'
         };
 
-        function fetchAIComment(moment, role, userComment) {
+        // type: 'reply' 表示有人在回复他；'comment' 表示刚发朋友圈，常规评论
+        function fetchAIComment(moment, role, userComment, type) {
             var isLishen = role === 'lishen';
             var prompt = "";
             
-            // 核心修复：明确区分是谁的朋友圈
             var targetContext = moment.author === 'user' ? '用户（她）发的朋友圈' : '黎深发的朋友圈';
             
             if (isLishen) {
-                prompt = "系统提示：用户评论了你的朋友圈：“" + userComment + "”。这条朋友圈的内容是：“" + moment.content + "”。请用你（黎深）的性格回复她，必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
+                if (type === 'reply') {
+                    prompt = "系统提示：用户针对你的评论回复说：“" + userComment + "”。这条朋友圈的内容是：“" + moment.content + "”。请用你（黎深）的性格回复她，必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
+                } else {
+                    prompt = "系统提示：用户评论了你的朋友圈：“" + userComment + "”。这条朋友圈的内容是：“" + moment.content + "”。请用你（黎深）的性格回复她，必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
+                }
             } else {
                 var sysPrompt = NPC_PROMPTS[role];
-                prompt = sysPrompt + "\n这是" + targetContext + "，内容是：“" + moment.content + "”。请直接输出你的评论内容，不要加名字前缀，不要用引号。";
+                if (type === 'reply') {
+                    prompt = sysPrompt + "\n这是" + targetContext + "，内容是：“" + moment.content + "”。用户刚刚针对你的评论回复说：“" + userComment + "”。请直接输出你的回复内容，不要加名字前缀，不要用引号。";
+                } else {
+                    prompt = sysPrompt + "\n这是" + targetContext + "，内容是：“" + moment.content + "”。请直接输出你的评论内容，不要加名字前缀，不要用引号。";
+                }
             }
 
             fetch(API_URL, {
@@ -876,9 +919,7 @@
                 if (!reply || reply === 'null' || reply === 'undefined') reply = '...';
                 reply = reply.trim().replace(/\[mood.*?\]/g, '').replace(/^["']|["']$/g, '');
                 
-                if (isLishen) {
-                    moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
-                }
+                moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
                 
                 if (reply && reply !== '...') {
                     moment.comments.push({ user: role, text: reply });
@@ -887,44 +928,38 @@
                 saveMomentsData();
                 if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
             }).catch(function(e) {
-                if (isLishen) {
-                    moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
-                    saveMomentsData();
-                    if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
-                    showToast('黎深网络不佳，暂时无法回复');
-                }
+                moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
+                saveMomentsData();
+                if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                showToast('网络不佳，暂时无法回复');
             });
         }
 
-        // 触发 NPC 互动（必须点赞，概率触发评论）
+        // 触发 NPC 互动
         function triggerNPInteractions(momentId) {
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
 
             if (!moment.likes) moment.likes = [];
 
-            // 关轩：100%点赞，100%评论（3-5秒后）
             if (moment.likes.indexOf('guanxuan') === -1) moment.likes.push('guanxuan');
-            setTimeout(function() { fetchAIComment(moment, 'guanxuan', null); }, 3000 + Math.random()*2000);
+            setTimeout(function() { fetchAIComment(moment, 'guanxuan', null, 'comment'); }, 3000 + Math.random()*2000);
             
-            // 小袁：100%点赞，100%评论（5-8秒后）
             if (moment.likes.indexOf('xiaoyuan') === -1) moment.likes.push('xiaoyuan');
-            setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null); }, 5000 + Math.random()*3000);
+            setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null, 'comment'); }, 5000 + Math.random()*3000);
             
-            // 方院长：100%点赞，50%概率评论（8-11秒后）
             if (moment.likes.indexOf('fang') === -1) moment.likes.push('fang');
-            if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'fang', null); }, 8000 + Math.random()*3000);
+            if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'fang', null, 'comment'); }, 8000 + Math.random()*3000);
             
-            // 疏白：100%点赞，50%概率评论（10-14秒后）
             if (moment.likes.indexOf('shubai') === -1) moment.likes.push('shubai');
-            if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'shubai', null); }, 10000 + Math.random()*4000);
+            if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'shubai', null, 'comment'); }, 10000 + Math.random()*4000);
 
             saveMomentsData();
             if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
         }
 
         function openPublishModal() { 
-            editingMomentId = null; // 重置编辑状态
+            editingMomentId = null; 
             document.getElementById('publishText').value = '';
             document.getElementById('publishModal').classList.add('show'); 
         }
@@ -934,20 +969,12 @@
             var text = document.getElementById('publishText').value.trim();
             if (!text) return;
 
-            // 如果是编辑模式
             if (editingMomentId) {
                 var m = moments.find(function(item) { return item.id === editingMomentId; });
-                if (m) {
-                    m.content = text;
-                    saveMomentsData();
-                    renderMoments();
-                }
-                editingMomentId = null;
-                closePublishModal();
-                return;
+                if (m) { m.content = text; saveMomentsData(); renderMoments(); }
+                editingMomentId = null; closePublishModal(); return;
             }
             
-            // 新建朋友圈
             var newMoment = { id: 'm_' + Date.now(), author: 'user', content: text, time: Date.now(), comments: [], likes: [] };
             moments.unshift(newMoment);
             saveMomentsData();
@@ -958,10 +985,9 @@
             updateMomentsUI();
             renderMoments();
 
-            // 黎深必定回复并点赞
             setTimeout(function() { 
                 newMoment.likes.push('lishen');
-                fetchAIComment(newMoment, 'lishen', null); 
+                fetchAIComment(newMoment, 'lishen', null, 'comment'); 
             }, 1500);
             
             triggerNPInteractions(newMoment.id);
