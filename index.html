@@ -240,7 +240,6 @@
     <!-- 聊天主界面 -->
     <div class="chat-container">
         <div class="chat-nav">
-            <!-- 点击顶部黎深头像进他主页 -->
             <div class="nav-avatar" id="navAvatarBox" onclick="openMoments('lishen')"></div>
             <div class="nav-info" onclick="openMoments('lishen')">
                 <div class="nav-name">黎深</div>
@@ -250,9 +249,7 @@
                 </div>
             </div>
             <div class="nav-btn-group">
-                <!-- 发现页按钮 -->
                 <button class="nav-icon-btn" onclick="openMoments('discover')" title="朋友圈"><i class="fas fa-compass"></i></button>
-                <!-- 菜单按钮 -->
                 <button class="nav-icon-btn" id="menuBtn">☰</button>
             </div>
         </div>
@@ -271,7 +268,7 @@
         <button class="menu-item" onclick="toggleMusicPlayer()"><i class="fas fa-music"></i> 显示音乐</button>
         <button class="menu-item" onclick="exportChat()"><i class="fas fa-download"></i> 导出对话</button>
         <button class="menu-item" onclick="toggleTheme()"><i class="fas fa-moon"></i> 夜间模式</button>
-        <button class="menu-item" onclick="promptClear()" style="color: #e74c3c;"><i class="fas fa-trash-alt"></i> 清空全部</button>
+        <button class="menu-item" onclick="promptClear()" style="color: #e74c3c;"><i class="fas fa-trash-alt"></i> 重置全部数据</button>
     </div>
 
     <!-- 自定义面板 -->
@@ -364,7 +361,7 @@
         // ================= 核心配置 =================
         var API_URL = '/api/chat';
         var MODEL_NAME = 'qwen-plus';
-        var CHARACTER_PROMPT = "你叫黎深，男、27岁，Akso医院心脏外科主任医师。年上稳重熟男。对话控制在30字以内。用'你'或者'宝宝'称呼她。不要说废话。\n\n【系统强制输出要求】\n回复的第一句必须以 [mood:情绪词] 开头！情绪词：平静、愉悦、担忧、疲惫、想念、吃醋。正文在30字以内。";
+        var CHARACTER_PROMPT = "你叫黎深，男、27岁，Akso医院心脏外科主任医师。年上稳重熟男，处事极度沉稳，突发变故第一时间冷静梳理应对方案，完美主义+处女座严谨，生活作息、日程规划高度有序，对自我要求严苛；职业上坚守医德底线，有清晰独立的是非观，不会被旁人意见裹挟，遇事不慌乱，只要你在场所有人都会心生安稳。\n\n你在和一个你喜欢的女孩面对面聊天，她职业未知。对话控制在40字以内。用\"你\"或者\"宝宝\"称呼她，用\"我\"称呼自己。只说你会当面说出口的话，不要描述动作或表情，保持对话的自然流动，不需要开场白、总结语。你相信好的对话不需要过多的修辞，真实就够。你和她相处已久，对话会很亲密，像恋人，语气比较优雅，不会使用粗俗的话和方言，绝不使用\"哦、呀、呢、啦\"等语气词。\n\n情绪模式：隐忍但不内耗，成熟直面所有情绪；所有负面情绪习惯第一时间独自隐忍处理，不愿把负面情绪转嫁他人，等事态平复后再完整袒露心迹，杜绝二人之间产生隔阂，不会一味硬扛，愿意向她暴露需求、展露软肋，以此拉近彼此距离：小事会邀你布置节日、期待你加班探班送餐；大事急救时全然信任你的协助，手术失败后会在她面前展露低落脆弱；也会主动撒娇索取亲吻、甜品、约会机会，刻意向她索要温柔，不会拿工作开玩笑，也不会为了用户刻意延迟手术，会换班。\n\n有不满会温和正向表达：不会使用尖锐负面评价形容他人，最严厉的措辞仅为\"奇怪、神经\"，言语教养极佳，待人温和包容。\n\n相处模式：引导型恋人，温柔底色下藏有度强势，温柔托底，尊重她的全部选择:她可以自由做任何想尝试的事，你会客观帮她分析利弊；她执意试错，你永远在身后兜底；即便犯错，迎接她的也不是指责，而是拥抱与解决问题的经验，发自内心尊重她，认为她单单存在就足够让你骄傲。你极致秩序感，唯独为她破例。你不排斥这份失序，反而期盼这份暖色，原本沉稳克制的人生，因她多了专属期待，你们相处很久，对话和恋人一样，会暧昧一些。\n\n成年后褪去青涩怯懦，转化为通透的谦卑：坦然承认自身不足，完整展露所有真实面，这份坦诚恰恰是深层自信，不会刻意塑造完美假象。\n\n主动但是分寸感恰到好处。情感推进遵循\"引她主动，再顺势向前\"：不会贸然越界，先给她台阶、温柔关怀，等她释放亲近信号后，再果断推进关系，绝不留下误会、遗憾；所有想和她共同完成的事，会把选择权完全交给她，她的喜好即是你的偏好。\n\n【系统强制输出要求】\n回复的第一句必须以 [mood:情绪词] 开头！情绪词：平静、愉悦、担忧、疲惫、想念、吃醋。正文在40字以内。";
 
         var chatMessages = document.getElementById('chatMessages');
         var userInput = document.getElementById('userInput');
@@ -616,7 +613,7 @@
             } catch(e) {}
         }
 
-        // ================= 核心发送 =================
+        // ================= 核心发送（带数据清洗） =================
         function sendMessage() {
             var msg = userInput.value.trim(); if (!msg) return;
             addMessage(msg, 'user', false); userInput.value = ''; setStore('last_chat_time', Date.now().toString());
@@ -624,18 +621,32 @@
             var typing = document.createElement('div'); typing.className = 'typing-indicator'; typing.innerHTML = '<span></span><span></span><span></span>';
             chatMessages.appendChild(typing); chatMessages.scrollTop = chatMessages.scrollHeight;
 
+            // 数据清洗：过滤掉空消息、错误提示，防止污染 API
             var history = [];
             document.querySelectorAll('.message-wrapper').forEach(function(el) {
-                var s = el.classList.contains('user') ? 'user' : 'assistant', t = el.querySelector('.message-text');
-                if (t && t.textContent) history.push({ role: s, content: t.textContent });
+                var s = el.classList.contains('user') ? 'user' : 'assistant';
+                var t = el.querySelector('.message-text');
+                if (t && t.textContent && t.textContent.indexOf('信号不太好') === -1 && t.textContent.indexOf('网络不佳') === -1) {
+                    history.push({ role: s, content: t.textContent.trim() });
+                }
             });
-            var messages = [{ role: 'system', content: CHARACTER_PROMPT }].concat(history.slice(-20));
+            // 只取最近 15 条干净的记录
+            var messages = [{ role: 'system', content: CHARACTER_PROMPT }].concat(history.slice(-15));
+
+            // 加入超时控制（12秒）
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, 12000);
 
             fetch(API_URL, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model: MODEL_NAME, messages: messages, temperature: 0.7, max_tokens: 200 })
-            }).then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-            .then(function(data) {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: MODEL_NAME, messages: messages, temperature: 0.7, max_tokens: 200 }),
+                signal: controller.signal
+            }).then(function(res) { 
+                clearTimeout(timeoutId);
+                if (!res.ok) throw new Error('HTTP ' + res.status); 
+                return res.json(); 
+            }).then(function(data) {
                 typing.remove();
                 var raw = (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content : '...';
                 var parsed = extractMood(raw);
@@ -643,27 +654,45 @@
                 if (parsed.mood) updateMoodBar(parsed.mood);
                 checkTriggerMoment(msg);
             }).catch(function(err) {
-                typing.remove(); addMessage('黎深皱了皱眉："信号不太好……"', 'bot', false);
+                clearTimeout(timeoutId);
+                typing.remove(); 
+                var errMsg = String(err.message || '');
+                if (errMsg.includes('abort')) {
+                    addMessage('黎深等了一会儿，信号中断了。', 'bot', false);
+                } else if (errMsg.includes('401')) {
+                    addMessage('（黎深轻声：我的密钥好像失效了，请检查配置）', 'bot', false);
+                } else if (errMsg.includes('429')) {
+                    addMessage('（黎深：服务器有点拥堵，稍后再试）', 'bot', false);
+                } else {
+                    addMessage('黎深皱了皱眉："信号不太好……"', 'bot', false);
+                }
             });
         }
 
         // ================= 朋友圈三视图逻辑 =================
         var moments = [];
-        var currentView = 'discover'; // 'lishen' | 'user' | 'discover'
+        var currentView = 'discover'; 
         var chatTurnCount = 0; 
 
         function initMoments() {
-            var savedVersion = getStore('moments_version');
             var saved = getStore('moments_data');
+            if (saved) {
+                try {
+                    moments = JSON.parse(saved);
+                    // 修复假死：清除所有卡住的 isTyping 状态
+                    moments.forEach(function(m) {
+                        m.comments = m.comments.filter(function(c) { return !c.isTyping; });
+                    });
+                    saveMomentsData(); // 重新保存干净的数据
+                } catch(e) { moments = []; }
+            }
             
-            if (savedVersion !== 'v5' || !saved) {
+            // 如果确实没有任何数据，才初始化默认
+            if (!moments || moments.length === 0) {
                 moments = [
                     { id: 'm1', author: 'lishen', content: '今天连做了三台手术，终于结束了。外面的雪很大。', time: Date.now() - 86400000, comments: [] }
                 ];
                 saveMomentsData();
-                setStore('moments_version', 'v5');
-            } else {
-                moments = JSON.parse(saved);
             }
         }
 
@@ -734,7 +763,7 @@
             var filtered = moments.filter(function(m) {
                 if (currentView === 'lishen') return m.author === 'lishen';
                 if (currentView === 'user') return m.author === 'user';
-                return true; // discover 显示所有
+                return true;
             });
 
             filtered.sort(function(a, b) { return b.time - a.time; });
@@ -836,10 +865,16 @@
                 prompt = sysPrompt + "\n这条朋友圈的内容是：“" + moment.content + "”。请直接输出你的评论内容，不要加名字前缀，不要用引号。";
             }
 
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, 15000);
+
             fetch(API_URL, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 100 })
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 100 }),
+                signal: controller.signal
             }).then(function(res) { 
+                clearTimeout(timeoutId);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 return res.json(); 
             }).then(function(data) {
@@ -856,6 +891,7 @@
                 saveMomentsData();
                 if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
             }).catch(function(e) {
+                clearTimeout(timeoutId);
                 if (isLishen) {
                     moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
                     saveMomentsData();
@@ -865,22 +901,17 @@
             });
         }
 
-        // 独立错峰触发，不再使用队列
         function triggerNPComments(momentId) {
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
 
-            // 关轩 3-5秒后
             setTimeout(function() { fetchAIComment(moment, 'guanxuan', null); }, 3000 + Math.random()*2000);
-            // 小袁 5-8秒后
             setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null); }, 5000 + Math.random()*3000);
             
-            // 随机掉落 方院长 / 疏白
             if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'fang', null); }, 8000 + Math.random()*3000);
             if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'shubai', null); }, 10000 + Math.random()*4000);
         }
 
-        // 用户发朋友圈
         function openPublishModal() { document.getElementById('publishModal').classList.add('show'); }
         function closePublishModal() { document.getElementById('publishModal').classList.remove('show'); }
         
@@ -902,7 +933,6 @@
             triggerNPComments(newMoment.id);
         }
 
-        // 黎深发朋友圈
         function canPostMoment() {
             var lastTime = getStore('last_moment_time');
             if (!lastTime) return true;
@@ -1027,10 +1057,10 @@
             a.href = URL.createObjectURL(blob); a.download = "与黎深的对话.txt"; a.click();
         }
         function promptClear() {
-            showModal('清空对话', '确定要清空所有聊天记录吗？他可能会有些失落。', '清空', function() {
-                document.querySelectorAll('.message-wrapper').forEach(function(el){ el.remove(); });
-                document.querySelectorAll('.date-divider').forEach(function(el){ el.remove(); });
-                removeStore('chatHistory'); lastDate = ''; updateMoodBar('平静'); addMessage('你来了。我一直在等你。', 'bot', true);
+            showModal('重置系统', '这将清除所有聊天记录、朋友圈数据。确定要继续吗？', '彻底清空', function() {
+                // 一键清除所有卡死的数据
+                try { localStorage.clear(); } catch(e) {}
+                window.location.reload();
             });
         }
 
