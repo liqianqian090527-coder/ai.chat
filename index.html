@@ -52,18 +52,18 @@
         }
 
         /* ===== 头部 ===== */
-        .chat-nav { display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; gap: 14px; background: rgba(255,255,255,0.3); }
+        .chat-nav { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; gap: 10px; background: rgba(255,255,255,0.3); }
         
-        .nav-avatar { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff; flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-main); overflow: hidden; box-shadow: 0 4px 10px rgba(74,144,226,0.1); cursor: pointer; transition: transform 0.2s; }
+        .nav-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-main); overflow: hidden; box-shadow: 0 4px 10px rgba(74,144,226,0.1); cursor: pointer; transition: transform 0.2s; }
         .nav-avatar:hover { transform: scale(1.05); }
         .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .nav-info { flex: 1; cursor: pointer; }
-        .nav-name { font-size: 18px; font-weight: 600; color: var(--text-main); letter-spacing: 0.5px; }
-        .nav-status { font-size: 13px; color: var(--text-main); opacity: 0.8; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+        .nav-info { flex: 1; cursor: pointer; overflow: hidden; }
+        .nav-name { font-size: 17px; font-weight: 600; color: var(--text-main); letter-spacing: 0.5px; white-space: nowrap; }
+        .nav-status { font-size: 12px; color: var(--text-main); opacity: 0.8; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
         .nav-status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; transition: background 0.4s; }
         
-        .nav-btn-group { display: flex; gap: 8px; align-items: center; }
-        .nav-icon-btn { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8); color: var(--text-main); font-size: 18px; cursor: pointer; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .nav-btn-group { display: flex; gap: 6px; align-items: center; }
+        .nav-icon-btn { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8); color: var(--text-main); font-size: 16px; cursor: pointer; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .nav-icon-btn:hover { background: #fff; }
 
         /* ===== 聊天区 ===== */
@@ -210,16 +210,18 @@
             .music-player.expanded .time-display { font-size: 10px; }
             .mobile-music-icon { display: flex; font-size: 20px; color: var(--primary); width: 100%; height: 100%; align-items: center; justify-content: center; }
             .music-player.expanded .mobile-music-icon { display: none; }
+            .nav-info { margin-right: 10px; }
         }
         @media (min-width: 641px) { .mobile-music-icon { display: none; } }
     </style>
 </head>
 <body>
-    <!-- 提示弹窗 -->
     <div class="toast-box" id="toastBox"><i class="fas fa-info-circle"></i> <span id="toastMsg"></span></div>
 
     <input type="file" id="bgUpload" accept="image/*" style="display: none;">
-    <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+    <input type="file" id="avatarLishenUpload" accept="image/*" style="display: none;">
+    <input type="file" id="avatarUserUpload" accept="image/*" style="display: none;">
+    <input type="file" id="petUpload" accept="image/*" style="display: none;">
     <input type="file" id="momentBgUpload" accept="image/*" style="display: none;">
 
     <div class="snow-layer" id="snowLayer"></div>
@@ -236,7 +238,10 @@
                 </div>
             </div>
             <div class="nav-btn-group">
-                <div class="nav-avatar" id="userNavAvatar" onclick="openMoments('user')" style="width: 36px; height: 36px; font-size: 16px;">我</div>
+                <!-- 发现页（混排） -->
+                <button class="nav-icon-btn" onclick="openMoments('discover')" title="朋友圈"><i class="fas fa-compass"></i></button>
+                <!-- 我的头像进我的个人主页 -->
+                <div class="nav-avatar" id="userNavAvatar" onclick="openMoments('user')" style="width: 36px; height: 36px; font-size: 16px;"></div>
                 <button class="nav-icon-btn" id="menuBtn">☰</button>
             </div>
         </div>
@@ -252,8 +257,10 @@
     <!-- 下拉菜单 -->
     <div class="dropdown-menu" id="dropdownMenu">
         <button class="menu-item" onclick="toggleMusicPlayer()"><i class="fas fa-music"></i> 显示音乐</button>
-        <button class="menu-item" onclick="triggerBgUpload()"><i class="fas fa-image"></i> 更换背景</button>
-        <button class="menu-item" onclick="triggerAvatarUpload()"><i class="fas fa-user-circle"></i> 更换头像</button>
+        <button class="menu-item" onclick="triggerBgUpload()"><i class="fas fa-image"></i> 聊天背景</button>
+        <button class="menu-item" onclick="triggerAvatarLishen()"><i class="fas fa-user-circle"></i> 黎深头像</button>
+        <button class="menu-item" onclick="triggerAvatarUser()"><i class="fas fa-user"></i> 我的头像</button>
+        <button class="menu-item" onclick="triggerPetUpload()"><i class="fas fa-child"></i> 桌面小人</button>
         <button class="menu-item" onclick="exportChat()"><i class="fas fa-download"></i> 导出对话</button>
         <button class="menu-item" onclick="toggleTheme()"><i class="fas fa-moon"></i> 夜间模式</button>
         <button class="menu-item" onclick="promptClear()" style="color: #e74c3c;"><i class="fas fa-trash-alt"></i> 清空全部</button>
@@ -291,21 +298,20 @@
     <!-- 桌面宠物 -->
     <div class="desktop-pet" id="desktopPet"></div>
 
-    <!-- 微信版朋友圈 -->
+    <!-- 朋友圈视图 -->
     <div class="wx-moments-overlay" id="momentsOverlay">
         <div class="wx-nav">
             <button class="wx-nav-back" onclick="closeMoments()"><i class="fas fa-chevron-left"></i></button>
-            <div class="wx-nav-title" id="wxMomentsTitle">黎深的朋友圈</div>
+            <div class="wx-nav-title" id="wxMomentsTitle">发现</div>
             <div class="wx-nav-actions">
-                <button class="wx-nav-btn" id="wxDiscoverBtn" onclick="switchToDiscover()" title="发现"><i class="fas fa-compass"></i></button>
                 <button class="wx-nav-btn" id="wxPublishBtn" onclick="openPublishModal()" title="发朋友圈"><i class="fas fa-camera"></i></button>
             </div>
         </div>
-        <div class="wx-list" id="wxList">
+        <div class="wx-list">
             <div class="wx-cover" id="wxCover">
                 <img src="" id="wxCoverImg" class="bg">
                 <div class="wx-cover-info">
-                    <span class="wx-cover-name" id="wxCoverName">黎深</span>
+                    <span class="wx-cover-name" id="wxCoverName">我</span>
                     <img src="" id="wxCoverAvatar" class="wx-cover-avatar">
                 </div>
             </div>
@@ -354,20 +360,31 @@
             toastTimeout = setTimeout(function() { toast.classList.remove('show'); }, 3000);
         }
 
-        // ================= 头像与背景 =================
+        // ================= 头像与背景独立管理 =================
         var bgUpload = document.getElementById('bgUpload');
-        var avatarUpload = document.getElementById('avatarUpload');
+        var avatarLishenUpload = document.getElementById('avatarLishenUpload');
+        var avatarUserUpload = document.getElementById('avatarUserUpload');
+        var petUpload = document.getElementById('petUpload');
+        
         var navAvatarBox = document.getElementById('navAvatarBox');
+        var userNavAvatar = document.getElementById('userNavAvatar');
         var desktopPet = document.getElementById('desktopPet');
         
         function loadImages() {
+            // 1. 聊天背景
             var savedBg = getStore('custom_bg');
             document.body.style.backgroundImage = savedBg ? 'url(' + savedBg + ')' : 'url(images/bg.jpg)';
-            var customAvatar = getStore('custom_avatar');
-            var avatarSrc = customAvatar ? customAvatar : 'images/lishen.png';
-            navAvatarBox.innerHTML = '<img src="' + avatarSrc + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'❄️\'; this.parentElement.style.display=\'flex\'; this.parentElement.style.alignItems=\'center\'; this.parentElement.style.justifyContent=\'center\';">';
             
-            var petSrc = getStore('custom_pet') ? getStore('custom_pet') : 'images/lishen_q.png';
+            // 2. 黎深头像
+            var avatarSrcL = getStore('custom_avatar_lishen') || 'images/lishen.png';
+            navAvatarBox.innerHTML = '<img src="' + avatarSrcL + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'❄️\'; this.parentElement.style.display=\'flex\'; this.parentElement.style.alignItems=\'center\'; this.parentElement.style.justifyContent=\'center\';">';
+            
+            // 3. 我的头像
+            var avatarSrcU = getStore('custom_avatar_user') || 'images/user.png';
+            userNavAvatar.innerHTML = '<img src="' + avatarSrcU + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'👤\'; this.parentElement.style.display=\'flex\'; this.parentElement.style.alignItems=\'center\'; this.parentElement.style.justifyContent=\'center\';">';
+            
+            // 4. Q版小人
+            var petSrc = getStore('custom_pet') || 'images/lishen_q.png';
             desktopPet.innerHTML = '<img src="' + petSrc + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'黎\'; this.parentElement.style.fontSize=\'100px\'; this.parentElement.style.opacity=\'0.2\';">' + '<div class="pet-bubble" id="petBubble"></div>';
             bindPetEvents();
         }
@@ -380,15 +397,37 @@
             reader.readAsDataURL(file);
         };
 
-        function triggerAvatarUpload() { avatarUpload.click(); }
-        avatarUpload.onchange = function(e) {
+        function triggerAvatarLishen() { avatarLishenUpload.click(); }
+        avatarLishenUpload.onchange = function(e) {
             var file = e.target.files[0]; if (!file) return;
             var reader = new FileReader();
             reader.onload = function(evt) {
-                setStore('custom_avatar', evt.target.result);
-                setStore('custom_pet', evt.target.result);
+                setStore('custom_avatar_lishen', evt.target.result);
                 loadImages();
                 document.querySelectorAll('.message-wrapper.bot .avatar img').forEach(function(img) { img.src = evt.target.result; });
+            };
+            reader.readAsDataURL(file);
+        };
+
+        function triggerAvatarUser() { avatarUserUpload.click(); }
+        avatarUserUpload.onchange = function(e) {
+            var file = e.target.files[0]; if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(evt) {
+                setStore('custom_avatar_user', evt.target.result);
+                loadImages();
+                document.querySelectorAll('.message-wrapper.user .avatar img').forEach(function(img) { img.src = evt.target.result; });
+            };
+            reader.readAsDataURL(file);
+        };
+
+        function triggerPetUpload() { petUpload.click(); }
+        petUpload.onchange = function(e) {
+            var file = e.target.files[0]; if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(evt) {
+                setStore('custom_pet', evt.target.result);
+                loadImages();
             };
             reader.readAsDataURL(file);
         };
@@ -444,7 +483,7 @@
 
         function createAvatar(sender) {
             var img = document.createElement('img'); img.className = 'avatar';
-            img.src = sender === 'user' ? 'images/user.png' : (getStore('custom_avatar') || 'images/lishen.png');
+            img.src = sender === 'user' ? (getStore('custom_avatar_user') || 'images/user.png') : (getStore('custom_avatar_lishen') || 'images/lishen.png');
             img.onclick = function(e) {
                 e.stopPropagation();
                 openMoments(sender === 'user' ? 'user' : 'lishen');
@@ -573,7 +612,7 @@
                 var parsed = extractMood(raw);
                 addMessage(parsed.text, 'bot', true);
                 if (parsed.mood) updateMoodBar(parsed.mood);
-                checkTriggerMoment(msg); // 检查是否触发朋友圈
+                checkTriggerMoment(msg);
             }).catch(function(err) {
                 typing.remove(); addMessage('黎深皱了皱眉："信号不太好……"', 'bot', false);
             });
@@ -581,7 +620,7 @@
 
         // ================= 朋友圈三视图逻辑 =================
         var moments = [];
-        var currentView = 'user'; // 'lishen' | 'user' | 'discover'
+        var currentView = 'discover'; // 'lishen' | 'user' | 'discover'
         var chatTurnCount = 0; 
         var commentQueue = []; 
         var isProcessingQueue = false;
@@ -603,6 +642,7 @@
 
         function saveMomentsData() { setStore('moments_data', JSON.stringify(moments)); }
 
+        // 统一入口：'discover' / 'lishen' / 'user'
         function openMoments(view) {
             currentView = view;
             document.getElementById('momentsOverlay').classList.add('show');
@@ -610,52 +650,52 @@
             renderMoments();
         }
 
-        function switchToDiscover() {
-            currentView = 'discover';
-            updateMomentsUI();
-            renderMoments();
-        }
-
         function updateMomentsUI() {
-            var isLishen = currentView === 'lishen';
-            var isUser = currentView === 'user';
-            var isDiscover = currentView === 'discover';
-            
             var titleEl = document.getElementById('wxMomentsTitle');
-            if (isLishen) titleEl.textContent = '黎深的朋友圈';
-            else if (isUser) titleEl.textContent = '我的朋友圈';
-            else titleEl.textContent = '发现';
-            
-            document.getElementById('wxDiscoverBtn').style.display = isDiscover ? 'none' : 'block';
-            document.getElementById('wxPublishBtn').style.display = isLishen ? 'none' : 'block';
-            
             var coverImg = document.getElementById('wxCoverImg');
             var coverName = document.getElementById('wxCoverName');
             var coverAvatar = document.getElementById('wxCoverAvatar');
+            var publishBtn = document.getElementById('wxPublishBtn');
             
-            if (isLishen) {
+            if (currentView === 'lishen') {
+                titleEl.textContent = '黎深的朋友圈';
                 coverImg.src = 'images/bg4.jpg'; 
                 coverName.textContent = '黎深';
-                coverAvatar.src = getStore('custom_avatar') || 'images/lishen.png';
+                coverAvatar.src = getStore('custom_avatar_lishen') || 'images/lishen.png';
+                publishBtn.style.display = 'none'; // 黎深的主页不能发动态
                 document.getElementById('wxCover').onclick = null;
-            } else {
+            } else if (currentView === 'user') {
+                titleEl.textContent = '我的朋友圈';
                 coverImg.src = getStore('moment_bg_user') || 'images/bg.jpg';
                 coverName.textContent = '我';
-                coverAvatar.src = 'images/user.png';
-                document.getElementById('wxCover').onclick = function() {
-                    var input = document.getElementById('momentBgUpload');
-                    input.onchange = function(e) {
-                        var file = e.target.files[0]; if(!file) return;
-                        var reader = new FileReader();
-                        reader.onload = function(evt) {
-                            document.getElementById('wxCoverImg').src = evt.target.result;
-                            setStore('moment_bg_user', evt.target.result);
-                        };
-                        reader.readAsDataURL(file);
-                    };
-                    input.click();
-                };
+                coverAvatar.src = getStore('custom_avatar_user') || 'images/user.png';
+                publishBtn.style.display = 'block'; // 我的主页可以发
+                bindCoverClick();
+            } else {
+                // 发现页（混排）
+                titleEl.textContent = '发现';
+                coverImg.src = getStore('moment_bg_user') || 'images/bg.jpg';
+                coverName.textContent = '我';
+                coverAvatar.src = getStore('custom_avatar_user') || 'images/user.png';
+                publishBtn.style.display = 'block'; // 发现页也可以发
+                bindCoverClick();
             }
+        }
+
+        function bindCoverClick() {
+            document.getElementById('wxCover').onclick = function() {
+                var input = document.getElementById('momentBgUpload');
+                input.onchange = function(e) {
+                    var file = e.target.files[0]; if(!file) return;
+                    var reader = new FileReader();
+                    reader.onload = function(evt) {
+                        document.getElementById('wxCoverImg').src = evt.target.result;
+                        setStore('moment_bg_user', evt.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                };
+                input.click();
+            };
         }
 
         function closeMoments() { document.getElementById('momentsOverlay').classList.remove('show'); }
@@ -670,7 +710,7 @@
             var filtered = moments.filter(function(m) {
                 if (currentView === 'lishen') return m.author === 'lishen';
                 if (currentView === 'user') return m.author === 'user';
-                return true;
+                return true; // discover 显示所有
             });
 
             filtered.sort(function(a, b) { return b.time - a.time; });
@@ -679,9 +719,9 @@
                 var div = document.createElement('div');
                 div.className = 'wx-post';
                 
-                var avatarSrc = m.author === 'lishen' ? (getStore('custom_avatar') || 'images/lishen.png') : 'images/user.png';
+                var avatarSrc = m.author === 'lishen' ? (getStore('custom_avatar_lishen') || 'images/lishen.png') : (getStore('custom_avatar_user') || 'images/user.png');
                 var name = m.author === 'lishen' ? '黎深' : '我';
-                var avatarOnclick = m.author === 'lishen' ? 'onclick="openMoments(\'lishen\')"' : '';
+                var avatarOnclick = m.author === 'lishen' ? 'onclick="openMoments(\'lishen\')"' : 'onclick="openMoments(\'user\')"';
                 
                 var commentsHtml = '';
                 m.comments.forEach(function(c) {
@@ -696,7 +736,7 @@
                     if (c.isTyping) {
                         commentsHtml += '<div class="wx-comment-item wx-comment-typing">' + cName + '正在输入...</div>';
                     } else {
-                        var nameOnclick = c.user === 'lishen' ? 'onclick="openMoments(\'lishen\')"' : '';
+                        var nameOnclick = c.user === 'lishen' ? 'onclick="openMoments(\'lishen\')"' : (c.user === 'user' ? 'onclick="openMoments(\'user\')"' : '');
                         commentsHtml += '<div class="wx-comment-item"><span class="wx-comment-user" ' + nameOnclick + '>' + cName + '</span>：' + c.text + '</div>';
                     }
                 });
@@ -720,7 +760,7 @@
                 list.appendChild(div);
             });
             
-            // 恢复滚动位置，防止跳动
+            // 恢复滚动位置，绝不跳回顶部
             list.parentNode.scrollTop = scrollTop;
         }
 
@@ -847,10 +887,9 @@
             document.getElementById('publishText').value = '';
             closePublishModal();
             
-            if (currentView === 'lishen') {
-                currentView = 'user';
-                updateMomentsUI();
-            }
+            // 发完强制跳到发现页，让你看到自己发的
+            currentView = 'discover';
+            updateMomentsUI();
             renderMoments();
 
             setTimeout(function() { fetchAIComment(newMoment, 'lishen', null); }, 1500);
