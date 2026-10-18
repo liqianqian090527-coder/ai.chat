@@ -44,6 +44,8 @@
 
         /* ===== 头部 ===== */
         .chat-nav { display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; gap: 14px; background: rgba(255,255,255,0.3); }
+        
+        /* 让用户自己的头像也显示出来 */
         .nav-avatar { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff; flex-shrink: 0; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-main); overflow: hidden; box-shadow: 0 4px 10px rgba(74,144,226,0.1); cursor: pointer; transition: transform 0.2s; }
         .nav-avatar:hover { transform: scale(1.05); }
         .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -153,7 +155,7 @@
         /* 列表 */
         .wx-list { flex: 1; overflow-y: auto; background: #fff; }
         .wx-post { padding: 20px 16px; display: flex; gap: 12px; border-bottom: 1px solid #f0f0f0; }
-        .wx-post-avatar { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex-shrink: 0; cursor: pointer; background: #eee; }
+        .wx-post-avatar { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex-shrink: 0; cursor: pointer; background: #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
         .wx-post-body { flex: 1; min-width: 0; }
         .wx-post-name { color: var(--wx-name); font-weight: 600; font-size: 15px; margin-bottom: 4px; cursor: pointer; }
         .wx-post-text { font-size: 15px; color: var(--wx-text); line-height: 1.5; margin-bottom: 8px; word-wrap: break-word; }
@@ -206,7 +208,6 @@
 <body>
     <input type="file" id="bgUpload" accept="image/*" style="display: none;">
     <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
-    <!-- 朋友圈封面上传 -->
     <input type="file" id="momentBgUpload" accept="image/*" style="display: none;">
 
     <div class="snow-layer" id="snowLayer"></div>
@@ -214,7 +215,7 @@
     <!-- 聊天主界面 -->
     <div class="chat-container">
         <div class="chat-nav">
-            <!-- 点击顶部头像也能进入朋友圈 -->
+            <!-- 点击顶部黎深头像进他朋友圈 -->
             <div class="nav-avatar" id="navAvatarBox" onclick="openMoments('lishen')"></div>
             <div class="nav-info" onclick="openMoments('lishen')">
                 <div class="nav-name">黎深</div>
@@ -224,7 +225,8 @@
                 </div>
             </div>
             <div class="nav-btn-group">
-                <button class="nav-icon-btn" onclick="openMoments('lishen')" title="黎深的朋友圈"><i class="fas fa-camera"></i></button>
+                <!-- 替换为进入自己朋友圈的入口（点击自己头像的逻辑在下面 JS 中绑定） -->
+                <div class="nav-avatar" id="userNavAvatar" onclick="openMoments('user')" style="width: 36px; height: 36px; font-size: 16px;">我</div>
                 <button class="nav-icon-btn" id="menuBtn">☰</button>
             </div>
         </div>
@@ -242,7 +244,6 @@
         <button class="menu-item" onclick="toggleMusicPlayer()"><i class="fas fa-music"></i> 显示音乐</button>
         <button class="menu-item" onclick="triggerBgUpload()"><i class="fas fa-image"></i> 更换背景</button>
         <button class="menu-item" onclick="triggerAvatarUpload()"><i class="fas fa-user-circle"></i> 更换头像</button>
-        <button class="menu-item" onclick="openMoments('user')"><i class="fas fa-user-friends"></i> 我的朋友圈</button>
         <button class="menu-item" onclick="exportChat()"><i class="fas fa-download"></i> 导出对话</button>
         <button class="menu-item" onclick="toggleTheme()"><i class="fas fa-moon"></i> 夜间模式</button>
         <button class="menu-item" onclick="promptClear()" style="color: #e74c3c;"><i class="fas fa-trash-alt"></i> 清空全部</button>
@@ -334,6 +335,7 @@
         var bgUpload = document.getElementById('bgUpload');
         var avatarUpload = document.getElementById('avatarUpload');
         var navAvatarBox = document.getElementById('navAvatarBox');
+        var userNavAvatar = document.getElementById('userNavAvatar');
         var desktopPet = document.getElementById('desktopPet');
         
         function loadImages() {
@@ -342,6 +344,7 @@
             var customAvatar = getStore('custom_avatar');
             var avatarSrc = customAvatar ? customAvatar : 'images/lishen.png';
             navAvatarBox.innerHTML = '<img src="' + avatarSrc + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'❄️\'; this.parentElement.style.display=\'flex\'; this.parentElement.style.alignItems=\'center\'; this.parentElement.style.justifyContent=\'center\';">';
+            
             var petSrc = getStore('custom_pet') ? getStore('custom_pet') : 'images/lishen_q.png';
             desktopPet.innerHTML = '<img src="' + petSrc + '" onerror="this.style.display=\'none\'; this.parentElement.textContent=\'黎\'; this.parentElement.style.fontSize=\'100px\'; this.parentElement.style.opacity=\'0.2\';">' + '<div class="pet-bubble" id="petBubble"></div>';
             bindPetEvents();
@@ -421,13 +424,11 @@
         function createAvatar(sender) {
             var img = document.createElement('img'); img.className = 'avatar';
             img.src = sender === 'user' ? 'images/user.png' : (getStore('custom_avatar') || 'images/lishen.png');
-            // 这里给黎深头像加点击进入朋友圈功能
-            if (sender === 'bot') {
-                img.onclick = function(e) {
-                    e.stopPropagation();
-                    openMoments('lishen');
-                };
-            }
+            // 点击头像跳转朋友圈
+            img.onclick = function(e) {
+                e.stopPropagation();
+                openMoments(sender === 'user' ? 'user' : 'lishen');
+            };
             img.onerror = function() { this.style.display = 'none'; var div = document.createElement('div'); div.className = 'avatar'; div.textContent = sender === 'user' ? '👤' : '❄️'; this.parentNode.insertBefore(div, this); };
             return img;
         }
@@ -562,19 +563,20 @@
         var moments = [];
         var currentMomentUser = 'lishen';
         var chatTurnCount = 0; 
+        var commentQueue = []; // 处理并发评论的队列
+        var isProcessingQueue = false;
 
         function initMoments() {
             var savedVersion = getStore('moments_version');
             var saved = getStore('moments_data');
             
-            // 强制更新版本，清除旧数据
-            if (savedVersion !== 'v2' || !saved) {
+            // 强制清理旧版本数据（删去你不想看到的旧评论）
+            if (savedVersion !== 'v3' || !saved) {
                 moments = [
-                    { id: 'm1', author: 'lishen', content: '今天连做了三台手术，终于结束了。外面的雪很大，不知道她那边冷不冷。', time: Date.now() - 86400000, comments: [{ user: 'user', text: '注意休息，别太累了。' }, { user: 'lishen', text: '嗯，我没事。' }] },
-                    { id: 'm2', author: 'lishen', content: '路过那家甜品店，顺手买了一份。不知道她什么时候有空来拿。', time: Date.now() - 172800000, comments: [] }
+                    { id: 'm1', author: 'lishen', content: '今天连做了三台手术，终于结束了。外面的雪很大。', time: Date.now() - 86400000, comments: [] }
                 ];
                 saveMomentsData();
-                setStore('moments_version', 'v2');
+                setStore('moments_version', 'v3');
             } else {
                 moments = JSON.parse(saved);
             }
@@ -590,25 +592,24 @@
             document.getElementById('wxMomentsTitle').textContent = isLishen ? '黎深的朋友圈' : '我的朋友圈';
             document.getElementById('wxPublishBtn').style.display = isLishen ? 'none' : 'block';
             
-            // 加载封面
-            var coverSrc = getStore(isLishen ? 'moment_bg_lishen' : 'moment_bg_user');
-            if (!coverSrc) coverSrc = 'images/bg.jpg'; // 默认背景
+            // 封面加载
+            var coverSrc = isLishen ? 'images/bg4.jpg' : (getStore('moment_bg_user') || 'images/bg.jpg');
             document.getElementById('wxCoverImg').src = coverSrc;
             
-            // 加载头部信息
             var avatarSrc = isLishen ? (getStore('custom_avatar') || 'images/lishen.png') : 'images/user.png';
             document.getElementById('wxCoverName').textContent = isLishen ? '黎深' : '我';
             document.getElementById('wxCoverAvatar').src = avatarSrc;
             
-            // 绑定封面上传事件
+            // 只有用户自己可以点击更换封面
             document.getElementById('wxCover').onclick = function() {
+                if (isLishen) return; // 黎深不可改
                 var input = document.getElementById('momentBgUpload');
                 input.onchange = function(e) {
                     var file = e.target.files[0]; if(!file) return;
                     var reader = new FileReader();
                     reader.onload = function(evt) {
                         document.getElementById('wxCoverImg').src = evt.target.result;
-                        setStore(isLishen ? 'moment_bg_lishen' : 'moment_bg_user', evt.target.result);
+                        setStore('moment_bg_user', evt.target.result);
                     };
                     reader.readAsDataURL(file);
                 };
@@ -628,25 +629,32 @@
                 return currentMomentUser === 'lishen' ? m.author === 'lishen' : m.author === 'user';
             });
 
-            // 按时间倒序
             filtered.sort(function(a, b) { return b.time - a.time; });
 
             filtered.forEach(function(m) {
                 var div = document.createElement('div');
                 div.className = 'wx-post';
+                
                 var avatarSrc = m.author === 'lishen' ? (getStore('custom_avatar') || 'images/lishen.png') : 'images/user.png';
                 var name = m.author === 'lishen' ? '黎深' : '我';
+                var avatarOnclick = m.author === 'lishen' ? 'onclick="openMoments(\'lishen\')"' : '';
                 
                 var commentsHtml = '';
                 m.comments.forEach(function(c) {
-                    var cName = c.user === 'lishen' ? '黎深' : '我';
-                    // 如果评论者是黎深，名字也可以点击进他的朋友圈
+                    var cName = c.user;
+                    var cAvatar = '';
+                    // 匹配 NPC 名字
+                    if (cName === 'guanxuan') cName = '关轩';
+                    else if (cName === 'xiaoyuan') cName = '小袁';
+                    else if (cName === 'fang') cName = '方院长';
+                    else if (cName === 'shubai') cName = '疏白';
+                    else if (cName === 'lishen') cName = '黎深';
+                    else if (cName === 'user') cName = '我';
+                    
+                    // 如果是黎深评论，名字也可以点击
                     var nameOnclick = c.user === 'lishen' ? 'onclick="openMoments(\'lishen\')"' : '';
                     commentsHtml += '<div class="wx-comment-item"><span class="wx-comment-user" ' + nameOnclick + '>' + cName + '</span>：' + c.text + '</div>';
                 });
-
-                // 点击好友头像进他朋友圈
-                var avatarOnclick = m.author === 'lishen' ? 'onclick="openMoments(\'lishen\')"' : '';
 
                 div.innerHTML = '<img src="' + avatarSrc + '" class="wx-post-avatar" ' + avatarOnclick + '>' +
                     '<div class="wx-post-body">' +
@@ -688,22 +696,106 @@
             saveMomentsData();
             renderMoments();
 
-            setTimeout(function() { fetchAIComment(moment, text); }, 1500);
+            // 如果评论的是黎深的朋友圈，黎深会回复你
+            if (moment.author === 'lishen') {
+                setTimeout(function() { fetchAIComment(moment, 'lishen', text); }, 2000);
+            }
         }
 
-        function fetchAIComment(moment, userComment) {
-            var prompt = "系统提示：你现在正在看朋友圈。这条朋友圈的内容是：“" + moment.content + "”。用户评论说：“" + userComment + "”。请用你（黎深）的性格回复她，你必须使用第一人称（我），不超过20字。不需要加 [mood:xxx] 格式。";
+        // ================= AI 评论生成与队列控制 =================
+
+        // 角色 Prompt 库
+        var NPC_PROMPTS = {
+            'guanxuan': '你是关轩，Akso医院心外科医生，黎深的助手。性格活泼开朗，说话直来直去。用第一人称“我”。针对朋友圈内容回复，不超过25字。',
+            'xiaoyuan': '你是小袁，本名袁晴，Akso医院护士。爱磕CP，说话活泼有闺蜜感。用第一人称“我”。针对朋友圈内容回复，不超过20字。',
+            'fang': '你是方冬明（方院长），资深前辈，黎深的老师。性格平静克制，长辈分寸感。用第一人称“我”。针对朋友圈内容回复，不超过20字，不调侃。',
+            'shubai': '你是疏白，神秘的小孩，称呼黎深为“黎深叔叔”。带有孩童般的直白与哲理感。用第一人称“我”。针对朋友圈内容回复，不超过20字。'
+        };
+
+        // 真实调用 AI
+        function fetchAIComment(moment, role, userComment) {
+            var isLishen = role === 'lishen';
+            var prompt = "";
+            
+            if (isLishen) {
+                prompt = "系统提示：用户评论了你的朋友圈：“" + userComment + "”。这条朋友圈的内容是：“" + moment.content + "”。请用你（黎深）的性格回复她，必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
+            } else {
+                var sysPrompt = NPC_PROMPTS[role];
+                prompt = sysPrompt + "\n这条朋友圈的内容是：“" + moment.content + "”。请直接输出你的评论内容，不要加名字前缀，不要用引号。";
+            }
+
             fetch(API_URL, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 100 })
             }).then(function(res) { return res.json(); }).then(function(data) {
-                var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '');
-                moment.comments.push({ user: 'lishen', text: reply });
+                var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '').replace(/^["']|["']$/g, '');
+                moment.comments.push({ user: role, text: reply });
                 saveMomentsData();
                 if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
             }).catch(function(e){});
         }
 
+        // 串行队列处理 NPC 评论（防卡死）
+        function processQueue() {
+            if (isProcessingQueue || commentQueue.length === 0) return;
+            isProcessingQueue = true;
+            
+            var task = commentQueue.shift();
+            var moment = moments.find(function(m){ return m.id === task.momentId; });
+            
+            if (moment) {
+                fetchAIComment(moment, task.role, null);
+            }
+            
+            // 等当前请求发完，隔 2 秒再发下一个
+            setTimeout(function() {
+                isProcessingQueue = false;
+                processQueue();
+            }, 2000);
+        }
+
+        // 触发 NPC 排队评论
+        function triggerNPComments(momentId) {
+            // 必出：关轩、小袁
+            commentQueue.push({ momentId: momentId, role: 'guanxuan' });
+            commentQueue.push({ momentId: momentId, role: 'xiaoyuan' });
+            
+            // 随机 50%：方院长
+            if (Math.random() < 0.5) commentQueue.push({ momentId: momentId, role: 'fang' });
+            // 随机 50%：疏白
+            if (Math.random() < 0.5) commentQueue.push({ momentId: momentId, role: 'shubai' });
+            
+            // 打乱顺序，显得更随机
+            commentQueue.sort(function() { return Math.random() - 0.5; });
+            
+            // 启动队列
+            processQueue();
+        }
+
+        // 用户发朋友圈
+        function openPublishModal() { document.getElementById('publishModal').classList.add('show'); }
+        function closePublishModal() { document.getElementById('publishModal').classList.remove('show'); }
+        
+        function submitMoment() {
+            var text = document.getElementById('publishText').value.trim();
+            if (!text) return;
+            
+            var newMoment = { id: 'm_' + Date.now(), author: 'user', content: text, time: Date.now(), comments: [] };
+            moments.unshift(newMoment);
+            saveMomentsData();
+            document.getElementById('publishText').value = '';
+            closePublishModal();
+            
+            if (currentMomentUser === 'user') renderMoments(); else openMoments('user');
+
+            // 黎深 1.5秒后回复
+            setTimeout(function() { fetchAIComment(newMoment, 'lishen', null); }, 1500);
+            
+            // 触发共友评论
+            triggerNPComments(newMoment.id);
+        }
+
+        // 黎深主动发朋友圈逻辑（保持原有冷却判断）
         function canPostMoment() {
             var lastTime = getStore('last_moment_time');
             if (!lastTime) return true;
@@ -726,13 +818,7 @@
                 if (t) historyContext += sender + "：" + t.textContent + "\n";
             }
 
-            var prompt = "你叫黎深，男、27岁，心脏外科医生。你性格沉稳克制，不爱发朋友圈，只有遇到有感触的事、或者对心爱的人的关心产生了情绪波动时，才会偶尔发一条。\n\n" +
-                         "下面是你们刚刚的聊天记录：\n" + historyContext + "\n\n" +
-                         "请基于这段对话，判断你现在是否有必要发一条朋友圈。\n" +
-                         "要求：\n" +
-                         "1. 如果觉得没必要发，或者对话太日常，请仅仅回复三个字母：NO。\n" +
-                         "2. 如果觉得有必要发，请直接写出不超过 30 字的朋友圈文案。**必须是以'我'为视角的第一人称**。符合你克制、温柔、理智的人设。\n" +
-                         "3. 不要加引号，不要解释，直接输出文案或 NO。不要带 [mood:xxx] 格式。";
+            var prompt = "你叫黎深，男、27岁，心脏外科医生。你性格沉稳克制，不爱发朋友圈，只有遇到有感触的事、或者对心爱的人的关心产生了情绪波动时，才会偶尔发一条。\n\n下面是你们刚刚的聊天记录：\n" + historyContext + "\n\n请基于这段对话，判断你现在是否有必要发一条朋友圈。\n要求：\n1. 如果觉得没必要发，请仅仅回复三个字母：NO。\n2. 如果觉得有必要发，请直接写出不超过 30 字的朋友圈文案。必须是以'我'为视角的第一人称。\n3. 不要加引号，不要解释。不要带 [mood:xxx] 格式。";
 
             fetch(API_URL, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -742,43 +828,18 @@
                 
                 if (content.indexOf('NO') === 0 || content === 'No' || content === 'no' || content === '') return;
 
-                moments.unshift({ id: 'm_' + Date.now(), author: 'lishen', content: content, time: Date.now(), comments: [] });
+                var newMomentId = 'm_' + Date.now();
+                moments.unshift({ id: newMomentId, author: 'lishen', content: content, time: Date.now(), comments: [] });
                 saveMomentsData();
                 setStore('last_moment_time', Date.now().toString());
                 
                 if (document.getElementById('momentsOverlay').classList.contains('show') && currentMomentUser === 'lishen') renderMoments();
                 addMessage('（黎深刚刚发了一条朋友圈）', 'bot', false);
+                
+                // 黎深发朋友圈，也会触发共友评论
+                triggerNPComments(newMomentId);
+                
             }).catch(function(e){});
-        }
-
-        function openPublishModal() { document.getElementById('publishModal').classList.add('show'); }
-        function closePublishModal() { document.getElementById('publishModal').classList.remove('show'); }
-        
-        function submitMoment() {
-            var text = document.getElementById('publishText').value.trim();
-            if (!text) return;
-            
-            var newMoment = { id: 'm_' + Date.now(), author: 'user', content: text, time: Date.now(), comments: [] };
-            moments.unshift(newMoment);
-            saveMomentsData();
-            document.getElementById('publishText').value = '';
-            closePublishModal();
-            
-            if (currentMomentUser === 'user') renderMoments(); // 只在当前是我的朋友圈时刷新，否则会在黎深列表里看到自己的
-            else openMoments('user'); // 如果是在看黎深的，发完后直接切到自己朋友圈看
-
-            setTimeout(function() {
-                var prompt = "系统提示：用户发了一条朋友圈：“" + text + "”。请用你（黎深）的性格回复她，你必须使用第一人称（我），不超过20字。不需要加 [mood:xxx] 格式。";
-                fetch(API_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 100 })
-                }).then(function(res){ return res.json(); }).then(function(data){
-                    var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '');
-                    newMoment.comments.push({ user: 'lishen', text: reply });
-                    saveMomentsData();
-                    if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
-                }).catch(function(){});
-            }, 2500);
         }
 
         // ================= 交互与拖拽 =================
