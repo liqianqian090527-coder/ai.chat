@@ -177,7 +177,6 @@
         .wx-comments-box { background: var(--wx-comment-bg); border-radius: 4px; padding: 8px 12px; font-size: 14px; display: none; position: relative; margin-top: 0; border-top: 1px solid #e5e5e5; }
         .wx-comments-box.show { display: block; }
         
-        /* 评论项：支持点击回复 */
         .wx-comment-item { padding: 4px 0; line-height: 1.4; word-wrap: break-word; cursor: pointer; border-radius: 4px; transition: background 0.2s; }
         .wx-comment-item:hover { background: #ebebeb; }
         .wx-comment-user { color: var(--wx-name); font-weight: 600; }
@@ -331,7 +330,7 @@
     <div class="publish-modal" id="publishModal">
         <div class="publish-header">
             <button class="publish-cancel" onclick="closePublishModal()">取消</button>
-            <button class="publish-submit" onclick="submitMoment()">发表</button>
+            <button class="publish-submit" id="publishSubmitBtn" onclick="submitMoment()">发表</button>
         </div>
         <textarea class="publish-textarea" id="publishText" placeholder="这一刻的想法..."></textarea>
     </div>
@@ -742,12 +741,8 @@
                     if (c.isTyping) {
                         commentsHtml += '<div class="wx-comment-item wx-comment-typing">' + getNPCName(c.user) + '正在输入...</div>';
                     } else {
-                        // 处理被回复的对象
                         var displayName = getNPCName(c.user);
-                        if (c.replyTo) {
-                            displayName += ' 回复 ' + getNPCName(c.replyTo);
-                        }
-                        // 点击评论触发回复
+                        if (c.replyTo) displayName += ' 回复 ' + getNPCName(c.replyTo);
                         var onclickAction = c.user !== 'user' ? 'onclick="event.stopPropagation(); triggerReply(\'' + m.id + '\', \'' + c.user + '\')"' : '';
                         
                         commentsHtml += '<div class="wx-comment-item" ' + onclickAction + '><span class="wx-comment-user">' + displayName + '</span>：' + c.text + '</div>';
@@ -801,7 +796,7 @@
             var bar = document.getElementById('input-bar-' + momentId);
             bar.classList.add('show');
             var input = document.getElementById('input-' + momentId);
-            input.dataset.replyTo = targetUser; // 记录回复目标
+            input.dataset.replyTo = targetUser;
             input.placeholder = '回复 ' + getNPCName(targetUser) + '：';
             input.focus();
         }
@@ -828,7 +823,7 @@
                 el.classList.remove('show');
             } else {
                 el.classList.add('show');
-                input.dataset.replyTo = ""; // 清空回复目标
+                input.dataset.replyTo = "";
                 input.placeholder = "评论...";
                 input.focus();
             }
@@ -846,20 +841,17 @@
             
             moment.comments.push({ user: 'user', text: text, replyTo: replyTo });
             input.value = '';
-            input.dataset.replyTo = ""; // 清空
+            input.dataset.replyTo = "";
             
-            // 如果直接评论黎深的朋友圈，或者回复了黎深，则显示占位符
             if (moment.author === 'lishen' || replyTo === 'lishen') {
                 moment.comments.push({ user: 'lishen', text: '', isTyping: true });
             } else if (replyTo && replyTo !== 'user') {
-                // 如果回复了其他 NPC，显示该 NPC 正在输入
                 moment.comments.push({ user: replyTo, text: '', isTyping: true });
             }
             
             saveMomentsData();
             renderMoments();
 
-            // 触发 AI 回复
             setTimeout(function() { 
                 if (replyTo) {
                     fetchAIComment(moment, replyTo, text, 'reply');
@@ -869,16 +861,61 @@
             }, 2000);
         }
 
-        // 编辑朋友圈
+        // ============ 编辑与发布 ============
+        function openPublishModal() { 
+            editingMomentId = null; 
+            document.getElementById('publishText').value = '';
+            document.getElementById('publishSubmitBtn').textContent = '发表';
+            document.getElementById('publishModal').classList.add('show'); 
+        }
+        function closePublishModal() { document.getElementById('publishModal').classList.remove('show'); }
+        
         function openEditMoment(id) {
             var moment = moments.find(function(m){ return m.id === id; });
             if (!moment) return;
             editingMomentId = id;
             document.getElementById('publishText').value = moment.content;
-            openPublishModal();
+            document.getElementById('publishSubmitBtn').textContent = '保存修改';
+            document.getElementById('publishModal').classList.add('show');
         }
 
-        // ================= NPC 评论生成 =================
+        function submitMoment() {
+            var text = document.getElementById('publishText').value.trim();
+            if (!text) return;
+
+            if (editingMomentId) {
+                // 查找现有的朋友圈，进行原地覆盖
+                var m = moments.find(function(item) { return item.id === editingMomentId; });
+                if (m) { 
+                    m.content = text; 
+                    m.time = Date.now(); // 可选：更新修改时间，让他排到前面。如果不希望排前，可以注释掉这行
+                    saveMomentsData(); 
+                    renderMoments(); 
+                }
+                editingMomentId = null; 
+                closePublishModal(); 
+                return;
+            }
+            
+            var newMoment = { id: 'm_' + Date.now(), author: 'user', content: text, time: Date.now(), comments: [], likes: [] };
+            moments.unshift(newMoment);
+            saveMomentsData();
+            document.getElementById('publishText').value = '';
+            closePublishModal();
+            
+            currentView = 'discover';
+            updateMomentsUI();
+            renderMoments();
+
+            setTimeout(function() { 
+                newMoment.likes.push('lishen');
+                fetchAIComment(newMoment, 'lishen', null, 'comment'); 
+            }, 1500);
+            
+            triggerNPInteractions(newMoment.id);
+        }
+
+        // ================= Prompt 引擎与 NPC 互动 =================
         var NPC_PROMPTS = {
             'guanxuan': '你是关轩，Akso医院心外科医生，黎深的助手。性格活泼开朗，说话直来直去。用第一人称“我”。针对朋友圈内容回复，不超过25字。',
             'xiaoyuan': '你是小袁，本名袁晴，Akso医院护士。爱磕CP，说话活泼有闺蜜感。用第一人称“我”。针对朋友圈内容回复，不超过20字。',
@@ -891,20 +928,23 @@
             var isLishen = role === 'lishen';
             var prompt = "";
             
-            var targetContext = moment.author === 'user' ? '用户（她）发的朋友圈' : '黎深发的朋友圈';
+            // 核心修复：严格区分是谁的朋友圈，以及当前是什么动作
+            var authorName = moment.author === 'user' ? '用户（她）' : '黎深';
             
             if (isLishen) {
                 if (type === 'reply') {
-                    prompt = "系统提示：用户针对你的评论回复说：“" + userComment + "”。这条朋友圈的内容是：“" + moment.content + "”。请用你（黎深）的性格回复她，必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
+                    prompt = "系统提示：你（黎深）和用户在她的朋友圈下互动。这条朋友圈的内容是：“" + moment.content + "”。用户刚刚针对你的评论回复说：“" + userComment + "”。请用你（黎深）的性格回复她，必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
+                } else if (moment.author === 'lishen') {
+                    prompt = "系统提示：这是你自己发的朋友圈，内容是：“" + moment.content + "”。用户评论说：“" + userComment + "”。请用你（黎深）的性格回复她，必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
                 } else {
-                    prompt = "系统提示：用户评论了你的朋友圈：“" + userComment + "”。这条朋友圈的内容是：“" + moment.content + "”。请用你（黎深）的性格回复她，必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
+                    prompt = "系统提示：这是用户（她）发的朋友圈，内容是：“" + moment.content + "”。请用你（黎深）的性格，针对她的这条动态留一条关心的评论。必须使用第一人称，不超过20字。不需要加 [mood:xxx] 格式。";
                 }
             } else {
                 var sysPrompt = NPC_PROMPTS[role];
                 if (type === 'reply') {
-                    prompt = sysPrompt + "\n这是" + targetContext + "，内容是：“" + moment.content + "”。用户刚刚针对你的评论回复说：“" + userComment + "”。请直接输出你的回复内容，不要加名字前缀，不要用引号。";
+                    prompt = sysPrompt + "\n这是" + authorName + "的朋友圈，内容是：“" + moment.content + "”。用户刚刚针对你的评论回复说：“" + userComment + "”。请直接输出你的回复内容，不要加名字前缀，不要用引号。";
                 } else {
-                    prompt = sysPrompt + "\n这是" + targetContext + "，内容是：“" + moment.content + "”。请直接输出你的评论内容，不要加名字前缀，不要用引号。";
+                    prompt = sysPrompt + "\n这是" + authorName + "的朋友圈，内容是：“" + moment.content + "”。请直接输出你的评论内容，不要加名字前缀，不要用引号。";
                 }
             }
 
@@ -935,11 +975,9 @@
             });
         }
 
-        // 触发 NPC 互动
         function triggerNPInteractions(momentId) {
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
-
             if (!moment.likes) moment.likes = [];
 
             if (moment.likes.indexOf('guanxuan') === -1) moment.likes.push('guanxuan');
@@ -956,41 +994,6 @@
 
             saveMomentsData();
             if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
-        }
-
-        function openPublishModal() { 
-            editingMomentId = null; 
-            document.getElementById('publishText').value = '';
-            document.getElementById('publishModal').classList.add('show'); 
-        }
-        function closePublishModal() { document.getElementById('publishModal').classList.remove('show'); }
-        
-        function submitMoment() {
-            var text = document.getElementById('publishText').value.trim();
-            if (!text) return;
-
-            if (editingMomentId) {
-                var m = moments.find(function(item) { return item.id === editingMomentId; });
-                if (m) { m.content = text; saveMomentsData(); renderMoments(); }
-                editingMomentId = null; closePublishModal(); return;
-            }
-            
-            var newMoment = { id: 'm_' + Date.now(), author: 'user', content: text, time: Date.now(), comments: [], likes: [] };
-            moments.unshift(newMoment);
-            saveMomentsData();
-            document.getElementById('publishText').value = '';
-            closePublishModal();
-            
-            currentView = 'discover';
-            updateMomentsUI();
-            renderMoments();
-
-            setTimeout(function() { 
-                newMoment.likes.push('lishen');
-                fetchAIComment(newMoment, 'lishen', null, 'comment'); 
-            }, 1500);
-            
-            triggerNPInteractions(newMoment.id);
         }
 
         function canPostMoment() {
