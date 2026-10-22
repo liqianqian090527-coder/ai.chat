@@ -762,8 +762,10 @@
                 var likeIcon = hasLiked ? '<i class="fas fa-heart"></i> 已赞' : '<i class="far fa-heart"></i> 赞';
                 
                 var editBtnHtml = '';
+                var deleteBtnHtml = '';
                 if (m.author === 'user') {
                     editBtnHtml = '<button class="wx-action-btn" onclick="openEditMoment(\'' + m.id + '\')"><i class="fas fa-edit"></i> 编辑</button>';
+                    deleteBtnHtml = '<button class="wx-action-btn" style="color:#e74c3c;" onclick="deleteMoment(\'' + m.id + '\')"><i class="fas fa-trash"></i> 删除</button>';
                 }
 
                 div.innerHTML = '<img src="' + avatarSrc + '" class="wx-post-avatar" ' + avatarOnclick + '>' +
@@ -773,6 +775,7 @@
                         '<div class="wx-post-time">' + formatWechatTime(m.time) + '</div>' +
                         '<div class="wx-post-actions">' +
                             editBtnHtml +
+                            deleteBtnHtml +
                             '<button class="' + likeBtnClass + '" onclick="toggleLike(\'' + m.id + '\')">' + likeIcon + '</button>' +
                             '<button class="wx-action-btn" onclick="toggleCommentInput(\'' + m.id + '\')"><i class="fas fa-comment-dots"></i> 评论</button>' +
                         '</div>' +
@@ -789,6 +792,14 @@
             });
             
             list.parentNode.scrollTop = scrollTop;
+        }
+
+        function deleteMoment(id) {
+            showModal('删除朋友圈', '确定要删除这条朋友圈吗？', '删除', function() {
+                moments = moments.filter(function(m) { return m.id !== id; });
+                saveMomentsData();
+                renderMoments();
+            });
         }
 
         // 指定回复对象
@@ -907,19 +918,21 @@
             renderMoments();
 
             setTimeout(function() { 
-                newMoment.likes.push('lishen');
+                if (newMoment.likes.indexOf('lishen') === -1) newMoment.likes.push('lishen');
+                saveMomentsData();
+                renderMoments();
                 fetchAIComment(newMoment, 'lishen', null, 'comment'); 
-            }, 1500);
+            }, 2000);
             
             triggerNPInteractions(newMoment.id);
         }
 
         // ================= Prompt 引擎与 NPC 互动 =================
         var NPC_PROMPTS = {
-            'guanxuan': '你是关轩，Akso医院心外科医生，黎深的助手。性格活泼开朗，说话直来直去。用第一人称“我”。针对朋友圈内容回复，不超过25字。',
+            'guanxuan': '你是关轩，Akso医院心外科医生，黎深的助手。性格活泼开朗，说话直来直去。注意：你在称呼黎深时，必须叫他“黎老师”或“黎主任”，绝对不能直呼其名。用第一人称“我”。针对朋友圈内容回复，不超过25字。',
             'xiaoyuan': '你是小袁，本名袁晴，Akso医院护士。爱磕CP，说话活泼有闺蜜感。用第一人称“我”。针对朋友圈内容回复，不超过20字。',
             'fang': '你是方冬明（方院长），资深前辈，黎深的老师。性格平静克制，长辈分寸感。用第一人称“我”。针对朋友圈内容回复，不超过20字，不调侃。',
-            'shubai': '你是疏白，神秘的小孩，称呼黎深为“黎深叔叔”。带有孩童般的直白与哲理感。用第一人称“我”。针对朋友圈内容回复，不超过20字。'
+            'shubai': '你是疏白，神秘的小孩，注意：你称呼黎深时必须叫“黎深叔叔”。带有孩童般的直白与哲理感。用第一人称“我”。针对朋友圈内容回复，不超过20字。'
         };
 
         function fetchAIComment(moment, role, userComment, type) {
@@ -972,23 +985,45 @@
             });
         }
 
+        // 陆续点赞与评论逻辑（每个动作间隔3-5秒，不再瞬间全赞）
         function triggerNPInteractions(momentId) {
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
             if (!moment.likes) moment.likes = [];
 
-            if (moment.likes.indexOf('guanxuan') === -1) moment.likes.push('guanxuan');
-            setTimeout(function() { fetchAIComment(moment, 'guanxuan', null, 'comment'); }, 3000 + Math.random()*2000);
+            // 关轩
+            setTimeout(function() {
+                if (moment.likes.indexOf('guanxuan') === -1) moment.likes.push('guanxuan');
+                saveMomentsData(); if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+            }, 3000 + Math.random()*2000); 
+            setTimeout(function() { fetchAIComment(moment, 'guanxuan', null, 'comment'); }, 5000 + Math.random()*2000);
             
-            if (moment.likes.indexOf('xiaoyuan') === -1) moment.likes.push('xiaoyuan');
-            setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null, 'comment'); }, 5000 + Math.random()*3000);
+            // 小袁
+            setTimeout(function() {
+                if (moment.likes.indexOf('xiaoyuan') === -1) moment.likes.push('xiaoyuan');
+                saveMomentsData(); if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+            }, 7000 + Math.random()*3000);
+            setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null, 'comment'); }, 9000 + Math.random()*3000);
             
-            if (moment.likes.indexOf('fang') === -1) moment.likes.push('fang');
-            if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'fang', null, 'comment'); }, 8000 + Math.random()*3000);
+            // 方院长（50%概率点赞与评论）
+            if (Math.random() < 0.5) {
+                setTimeout(function() {
+                    if (moment.likes.indexOf('fang') === -1) moment.likes.push('fang');
+                    saveMomentsData(); if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                }, 11000 + Math.random()*3000);
+                setTimeout(function() { fetchAIComment(moment, 'fang', null, 'comment'); }, 13000 + Math.random()*3000);
+            }
             
-            if (moment.likes.indexOf('shubai') === -1) moment.likes.push('shubai');
-            if (Math.random() < 0.5) setTimeout(function() { fetchAIComment(moment, 'shubai', null, 'comment'); }, 10000 + Math.random()*4000);
+            // 疏白（50%概率点赞与评论）
+            if (Math.random() < 0.5) {
+                setTimeout(function() {
+                    if (moment.likes.indexOf('shubai') === -1) moment.likes.push('shubai');
+                    saveMomentsData(); if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                }, 15000 + Math.random()*4000);
+                setTimeout(function() { fetchAIComment(moment, 'shubai', null, 'comment'); }, 17000 + Math.random()*4000);
+            }
 
+            // 初始保存一次，确保队列建立
             saveMomentsData();
             if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
         }
@@ -1028,7 +1063,7 @@
                 if (content.indexOf('NO') === 0 || content === 'No' || content === 'no' || content === '' || content === 'null') return;
 
                 var newMomentId = 'm_' + Date.now();
-                moments.unshift({ id: newMomentId, author: 'lishen', content: content, time: Date.now(), comments: [], likes: ['guanxuan'] });
+                moments.unshift({ id: newMomentId, author: 'lishen', content: content, time: Date.now(), comments: [], likes: [] });
                 saveMomentsData();
                 setStore('last_moment_time', Date.now().toString());
                 
@@ -1160,13 +1195,11 @@
                 }
             });
 
-            // 如果没有历史记录，走经典开场白
             if (history.length === 0) {
                 addMessage('你来了。我一直在等你。', 'bot', true);
                 return;
             }
 
-            // 如果有历史记录，提取最近6条，让 AI 根据上下文生成问候
             var recentHistory = history.slice(-6);
             var prompt = "系统提示：用户刚刚上线。请根据你们之前的聊天记录（" + JSON.stringify(recentHistory) + "），主动给她发一条问候消息。要求：符合黎深的性格，自然亲密，不超过20字。不需要加 [mood:xxx] 格式。";
 
@@ -1183,7 +1216,7 @@
                 addMessage(reply, 'bot', true);
             }).catch(function(e) {
                 typing.remove();
-                addMessage('你来了。', 'bot', true); // 失败兜底
+                addMessage('你来了。', 'bot', true); 
             });
         }
 
@@ -1191,7 +1224,6 @@
             loadImages(); initMoments(); loadMessages(); updateMoodBar(getStore('lishen_last_mood') || '平静');
             
             var last = getStore('last_chat_time');
-            // 判断是否超过 10 分钟没见，或者第一次打开
             if (!last || (Date.now() - parseInt(last) > 10 * 60 * 1000)) {
                 triggerLoginGreeting();
             }
