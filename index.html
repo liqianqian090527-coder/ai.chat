@@ -28,7 +28,6 @@
             transition: background 0.5s ease; margin: 0; position: relative; overflow: hidden;
         }
 
-        /* 全局通知 Toast */
         .toast-box {
             position: fixed; top: -60px; left: 50%; transform: translateX(-50%);
             background: #333; color: #fff; padding: 10px 24px; border-radius: 20px;
@@ -40,7 +39,7 @@
         .snow-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 998; overflow: hidden; }
         .snow-layer .flake { position: absolute; top: -30px; color: rgba(255, 255, 255, 0.9); filter: drop-shadow(0 0 4px rgba(180, 220, 255, 0.8)); animation: snowFall linear infinite; }
         @keyframes snowFall { 0% { transform: translateY(-6vh) translateX(0) rotate(0deg); opacity: 0; } 8% { opacity: 1; } 50% { transform: translateY(50vh) translateX(4vw) rotate(180deg); } 92% { opacity: 1; } 100% { transform: translateY(106vh) translateX(-2vw) rotate(360deg); opacity: 0; } }
-        
+
         .chat-container {
             width: 600px; height: 800px; max-width: 94vw; max-height: 88vh; 
             background: var(--glass-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
@@ -56,34 +55,33 @@
         .nav-name { font-size: 17px; font-weight: 600; color: var(--text-main); letter-spacing: 0.5px; white-space: nowrap; }
         .nav-status { font-size: 12px; color: var(--text-main); opacity: 0.8; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
         .nav-status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; transition: background 0.4s; }
-        
+
         .nav-btn-group { display: flex; gap: 6px; align-items: center; }
         .nav-icon-btn { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8); color: var(--text-main); font-size: 16px; cursor: pointer; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; position: relative; }
         .nav-icon-btn:hover { background: #fff; }
 
-        /* 朋友圈红点提醒 */
         .unread-badge { position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; border: 1px solid #fff; display: none; }
         .unread-badge.show { display: block; }
 
         .chat-messages { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
         .chat-messages::-webkit-scrollbar { width: 4px; }
         .chat-messages::-webkit-scrollbar-thumb { background: rgba(74,144,226,0.2); border-radius: 10px; }
-        
+
         .date-divider { text-align: center; font-size: 12px; color: rgba(26, 42, 58, 0.4); padding: 10px 0; font-weight: 500; }
-        
+
         .message-wrapper { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 6px; animation: messageSlideIn 0.35s ease-out; position: relative; }
         @keyframes messageSlideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .message-wrapper.user { justify-content: flex-end; }
         .message-wrapper.user .avatar { order: 1; }
-        
+
         .avatar { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-main); border: 2px solid #fff; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        
+
         .message { padding: 14px 20px; border-radius: 22px; max-width: 76%; word-wrap: break-word; line-height: 1.6; font-size: 15px; position: relative; color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; }
         .message.user { background: linear-gradient(135deg, #c2e0ff 0%, #a4c9f0 100%); border-bottom-right-radius: 6px; border: 1px solid #fff; }
         .message.bot { background: rgba(255, 255, 255, 0.9); border-bottom-left-radius: 6px; border: 1px solid #fff; }
         .message .time { font-size: 10px; opacity: 0.4; margin-left: 8px; display: inline-block; }
-        
+
         .delete-btn { position: absolute; top: -8px; width: 22px; height: 22px; background: var(--primary); color: #fff; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(74,144,226,0.4); z-index: 10; transition: 0.2s; }
         .message-wrapper.user .delete-btn { left: -8px; }
         .message-wrapper.bot .delete-btn { right: -8px; }
@@ -116,7 +114,6 @@
         .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); cursor: pointer; }
         .time-display { font-size: 11px; color: var(--text-main); opacity: 0.7; margin-top: 4px; }
 
-        /* ===== 弹窗：修复了 z-index 导致被朋友圈盖住的问题 ===== */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); z-index: 100005; display: none; align-items: center; justify-content: center; }
         .modal-overlay.show { display: flex; }
         .modal-box { background: #fff; border-radius: 20px; padding: 24px; width: 300px; max-width: 90vw; text-align: center; }
@@ -147,22 +144,21 @@
         .pet-bubble { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); border-radius: 16px; padding: 10px 16px; font-size: 14px; color: var(--text-main); opacity: 0; transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap; }
         .pet-bubble.show { opacity: 1; }
 
-        /* ===== 完美复刻微信朋友圈 ===== */
         .wx-moments-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--wx-bg); z-index: 100000; display: none; flex-direction: column; }
         .wx-moments-overlay.show { display: flex; }
-        
+
         .wx-nav { background: var(--wx-nav); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #dcdcdc; height: 50px; }
         .wx-nav-back { background: none; border: none; font-size: 20px; color: #333; cursor: pointer; width: 40px; text-align: left; }
         .wx-nav-title { font-size: 17px; font-weight: 600; color: #000; }
         .wx-nav-actions { display: flex; gap: 15px; justify-content: flex-end; width: 60px; }
         .wx-nav-btn { background: none; border: none; font-size: 20px; color: #333; cursor: pointer; }
-        
+
         .wx-cover { height: 280px; position: relative; background: #eee; overflow: hidden; cursor: pointer; }
         .wx-cover img.bg { width: 100%; height: 100%; object-fit: cover; }
         .wx-cover-info { position: absolute; bottom: 20px; right: 20px; display: flex; align-items: flex-end; gap: 15px; pointer-events: none; }
         .wx-cover-name { font-size: 18px; font-weight: bold; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); margin-bottom: 15px; }
         .wx-cover-avatar { width: 70px; height: 70px; border-radius: 10px; border: 2px solid #fff; object-fit: cover; box-shadow: 0 2px 10px rgba(0,0,0,0.2); background: #fff; }
-        
+
         .wx-list { flex: 1; overflow-y: auto; background: #fff; }
         .wx-post { padding: 20px 16px; display: flex; gap: 12px; border-bottom: 1px solid #f0f0f0; }
         .wx-post-avatar { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex-shrink: 0; cursor: pointer; background: #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
@@ -170,7 +166,7 @@
         .wx-post-name { color: var(--wx-name); font-weight: 600; font-size: 15px; margin-bottom: 4px; cursor: pointer; }
         .wx-post-text { font-size: 15px; color: var(--wx-text); line-height: 1.5; margin-bottom: 8px; word-wrap: break-word; }
         .wx-post-time { font-size: 12px; color: var(--wx-time); margin-bottom: 8px; }
-        
+
         .wx-post-actions { display: flex; justify-content: flex-end; margin-bottom: 4px; gap: 8px;}
         .wx-action-btn { background: #f7f7f7; border: none; padding: 4px 10px; border-radius: 4px; font-size: 13px; color: var(--wx-name); cursor: pointer; display: flex; align-items: center; gap: 4px;}
         .wx-action-btn i { font-size: 12px; }
@@ -179,14 +175,14 @@
         .wx-likes-box { background: var(--wx-comment-bg); border-radius: 4px; padding: 8px 12px; font-size: 14px; margin-top: 4px; border-bottom: 1px solid #e5e5e5; }
         .wx-likes-box i { color: var(--wx-name); margin-right: 6px; font-size: 12px; }
         .wx-like-user { color: var(--wx-name); font-weight: 600; cursor: pointer; margin-right: 6px; }
-        
+
         .wx-comments-box { background: var(--wx-comment-bg); border-radius: 4px; padding: 8px 12px; font-size: 14px; display: none; position: relative; margin-top: 0; border-top: 1px solid #e5e5e5; }
         .wx-comments-box.show { display: block; }
-        
+
         .wx-comment-item { padding: 4px 0; line-height: 1.4; word-wrap: break-word; cursor: pointer; border-radius: 4px; transition: background 0.2s; }
         .wx-comment-item:hover { background: #ebebeb; }
         .wx-comment-user { color: var(--wx-name); font-weight: 600; }
-        
+
         .wx-input-bar { display: none; background: #f7f7f7; padding: 8px; border-radius: 4px; margin-top: 6px; gap: 8px; }
         .wx-input-bar.show { display: flex; }
         .wx-input-bar input { flex: 1; border: none; background: #fff; padding: 8px 12px; border-radius: 4px; font-size: 14px; outline: none; }
@@ -241,7 +237,6 @@
                 </div>
             </div>
             <div class="nav-btn-group">
-                <!-- 加上未读红点 -->
                 <button class="nav-icon-btn" onclick="openMoments('discover')" title="朋友圈">
                     <i class="fas fa-compass"></i>
                     <span class="unread-badge" id="unreadBadge"></span>
@@ -355,7 +350,7 @@
         var userInput = document.getElementById('userInput');
         var messageIdCounter = 0;
         var lastDate = '';
-        var hasUnreadMoments = false; // 朋友圈未读红点状态
+        var hasUnreadMoments = false; 
 
         var MOOD_MAP = {
             '平静': { color: '#4a90e2' }, '愉悦': { color: '#f5a623' }, '担忧': { color: '#9b59b6' },
@@ -375,7 +370,6 @@
             toastTimeout = setTimeout(function() { toast.classList.remove('show'); }, 3000);
         }
 
-        // --- 未读红点控制 ---
         function setUnreadBadge(state) {
             hasUnreadMoments = state;
             var badge = document.getElementById('unreadBadge');
@@ -383,7 +377,7 @@
             else badge.classList.remove('show');
         }
 
-        function openCustomPanel() { document.getElementById('customPanel').classList.add('show'); dropdown.classList.remove('show'); }
+        function openCustomPanel() { document.getElementById('customPanel').classList.add('show'); document.getElementById('dropdownMenu').classList.remove('show'); }
         function closeCustomPanel() { document.getElementById('customPanel').classList.remove('show'); }
 
         var bgUpload = document.getElementById('bgUpload');
@@ -593,7 +587,6 @@
             } catch(e) {}
         }
 
-        // ================= 聊天发送 =================
         function sendMessage() {
             var msg = userInput.value.trim(); if (!msg) return;
             addMessage(msg, 'user', false); userInput.value = ''; setStore('last_chat_time', Date.now().toString());
@@ -638,7 +631,6 @@
             });
         }
 
-        // ================= 朋友圈 =================
         var moments = [];
         var currentView = 'discover'; 
         var chatTurnCount = 0; 
@@ -651,7 +643,6 @@
                     moments = JSON.parse(saved);
                     moments.forEach(function(m) {
                         if (!m.likes) m.likes = [];
-                        // 初始化时自动清理历史遗留的 isTyping
                         m.comments = m.comments.filter(function(c) { return !c.isTyping; });
                     });
                     saveMomentsData();
@@ -671,7 +662,7 @@
         function openMoments(view) {
             currentView = view;
             document.getElementById('momentsOverlay').classList.add('show');
-            setUnreadBadge(false); // 进入朋友圈清除红点
+            setUnreadBadge(false); 
             updateMomentsUI();
             renderMoments();
         }
@@ -758,7 +749,6 @@
                 
                 var commentsHtml = '';
                 m.comments.forEach(function(c) {
-                    // 已经没有 isTyping 占位了
                     var displayName = getNPCName(c.user);
                     if (c.replyTo) displayName += ' 回复 ' + getNPCName(c.replyTo);
                     var onclickAction = c.user !== 'user' ? 'onclick="event.stopPropagation(); triggerReply(\'' + m.id + '\', \'' + c.user + '\')"' : '';
@@ -870,8 +860,6 @@
             input.value = '';
             input.dataset.replyTo = "";
             
-            // 取消“正在输入”占位逻辑，直接静默发请求
-            
             saveMomentsData();
             renderMoments();
 
@@ -884,7 +872,6 @@
             }, 2000);
         }
 
-        // ============ 编辑与发布 ============
         function openPublishModal() { 
             editingMomentId = null; 
             document.getElementById('publishText').value = '';
@@ -892,7 +879,7 @@
             document.getElementById('publishModal').classList.add('show'); 
         }
         function closePublishModal() { document.getElementById('publishModal').classList.remove('show'); }
-        
+
         function openEditMoment(id) {
             var moment = moments.find(function(m){ return m.id === id; });
             if (!moment) return;
@@ -939,9 +926,8 @@
             triggerNPInteractions(newMoment.id);
         }
 
-        // ================= Prompt 引擎与 NPC 互动 =================
         var NPC_PROMPTS = {
-            'guanxuan': '你是关轩，Akso医院心外科医生，黎深的助手。性格活泼开朗，说话直来直去。注意：你在称呼黎深时，必须叫他“黎老师”或“黎主任”，绝对不能直呼其名。用第一人称“我”。针对朋友圈内容回复，不超过25字。',
+            'guanxuan': '你是关轩，Akso医院心外科医生，黎深的助手。你幽默风趣，是全科室的开心果，但同时也是专业优秀的心外科医生。你性格活泼开朗，有时爱开玩笑。你称呼黎深为“黎老师”或“黎主任”，但不要每句话都带，只有提到他时才自然使用。回复朋友圈时，请展现你轻松、幽默的一面，可以适当调侃同事或分享科室日常。用第一人称“我”，针对内容回复，不超过25字。',
             'xiaoyuan': '你是小袁，本名袁晴，Akso医院护士。爱磕CP，说话活泼有闺蜜感。用第一人称“我”。针对朋友圈内容回复，不超过20字。',
             'fang': '你是方冬明（方院长），资深前辈，黎深的老师。性格平静克制，长辈分寸感。用第一人称“我”。针对朋友圈内容回复，不超过20字，不调侃。',
             'shubai': '你是疏白，神秘的小孩，注意：你称呼黎深时必须叫“黎深叔叔”。带有孩童般的直白与哲理感。用第一人称“我”。针对朋友圈内容回复，不超过20字。'
@@ -987,7 +973,6 @@
                 
                 saveMomentsData();
                 
-                // 如果当前不在朋友圈页面，弹出微信消息提醒并亮起红点
                 if (document.getElementById('momentsOverlay').classList.contains('show')) {
                     renderMoments();
                 } else {
@@ -1000,13 +985,11 @@
             });
         }
 
-        // 陆续点赞与评论逻辑（带消息提醒）
         function triggerNPInteractions(momentId) {
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
             if (!moment.likes) moment.likes = [];
 
-            // 关轩
             setTimeout(function() {
                 if (moment.likes.indexOf('guanxuan') === -1) {
                     moment.likes.push('guanxuan');
@@ -1017,7 +1000,6 @@
             }, 3000 + Math.random()*2000); 
             setTimeout(function() { fetchAIComment(moment, 'guanxuan', null, 'comment'); }, 5000 + Math.random()*2000);
             
-            // 小袁
             setTimeout(function() {
                 if (moment.likes.indexOf('xiaoyuan') === -1) {
                     moment.likes.push('xiaoyuan');
@@ -1028,7 +1010,6 @@
             }, 7000 + Math.random()*3000);
             setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null, 'comment'); }, 9000 + Math.random()*3000);
             
-            // 方院长（50%概率点赞与评论）
             if (Math.random() < 0.5) {
                 setTimeout(function() {
                     if (moment.likes.indexOf('fang') === -1) {
@@ -1041,7 +1022,6 @@
                 setTimeout(function() { fetchAIComment(moment, 'fang', null, 'comment'); }, 13000 + Math.random()*3000);
             }
             
-            // 疏白（50%概率点赞与评论）
             if (Math.random() < 0.5) {
                 setTimeout(function() {
                     if (moment.likes.indexOf('shubai') === -1) {
@@ -1214,7 +1194,6 @@
         audio.onloadedmetadata = function() { timeDisplay.textContent = "0:00 / " + formatTime(audio.duration); };
         progressSlider.oninput = function() { if (audio.duration) audio.currentTime = parseFloat(this.value) * audio.duration; };
 
-        // ================= 智能上线问候 =================
         function triggerLoginGreeting() {
             var history = [];
             document.querySelectorAll('.message-wrapper').forEach(function(el) {
