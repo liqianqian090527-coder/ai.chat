@@ -884,11 +884,10 @@
             if (!text) return;
 
             if (editingMomentId) {
-                // 查找现有的朋友圈，进行原地覆盖
                 var m = moments.find(function(item) { return item.id === editingMomentId; });
                 if (m) { 
                     m.content = text; 
-                    m.time = Date.now(); // 可选：更新修改时间，让他排到前面。如果不希望排前，可以注释掉这行
+                    m.time = Date.now(); 
                     saveMomentsData(); 
                     renderMoments(); 
                 }
@@ -923,12 +922,10 @@
             'shubai': '你是疏白，神秘的小孩，称呼黎深为“黎深叔叔”。带有孩童般的直白与哲理感。用第一人称“我”。针对朋友圈内容回复，不超过20字。'
         };
 
-        // type: 'reply' 表示有人在回复他；'comment' 表示刚发朋友圈，常规评论
         function fetchAIComment(moment, role, userComment, type) {
             var isLishen = role === 'lishen';
             var prompt = "";
             
-            // 核心修复：严格区分是谁的朋友圈，以及当前是什么动作
             var authorName = moment.author === 'user' ? '用户（她）' : '黎深';
             
             if (isLishen) {
@@ -1152,10 +1149,52 @@
         audio.onloadedmetadata = function() { timeDisplay.textContent = "0:00 / " + formatTime(audio.duration); };
         progressSlider.oninput = function() { if (audio.duration) audio.currentTime = parseFloat(this.value) * audio.duration; };
 
+        // ================= 智能上线问候 =================
+        function triggerLoginGreeting() {
+            var history = [];
+            document.querySelectorAll('.message-wrapper').forEach(function(el) {
+                var s = el.classList.contains('user') ? 'user' : 'assistant';
+                var t = el.querySelector('.message-text');
+                if (t && t.textContent && t.textContent.indexOf('系统报错') === -1 && t.textContent.indexOf('连接失败') === -1) {
+                    history.push({ role: s, content: t.textContent.trim() });
+                }
+            });
+
+            // 如果没有历史记录，走经典开场白
+            if (history.length === 0) {
+                addMessage('你来了。我一直在等你。', 'bot', true);
+                return;
+            }
+
+            // 如果有历史记录，提取最近6条，让 AI 根据上下文生成问候
+            var recentHistory = history.slice(-6);
+            var prompt = "系统提示：用户刚刚上线。请根据你们之前的聊天记录（" + JSON.stringify(recentHistory) + "），主动给她发一条问候消息。要求：符合黎深的性格，自然亲密，不超过20字。不需要加 [mood:xxx] 格式。";
+
+            var typing = document.createElement('div'); typing.className = 'typing-indicator'; typing.innerHTML = '<span></span><span></span><span></span>';
+            chatMessages.appendChild(typing); chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            fetch(API_URL, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: MODEL_NAME, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 100 })
+            }).then(function(res) { return res.json(); }).then(function(data) {
+                typing.remove();
+                var reply = data.choices[0].message.content.trim().replace(/\[mood.*?\]/g, '').replace(/^["']|["']$/g, '');
+                if (!reply) reply = '你来了。';
+                addMessage(reply, 'bot', true);
+            }).catch(function(e) {
+                typing.remove();
+                addMessage('你来了。', 'bot', true); // 失败兜底
+            });
+        }
+
         window.onload = function() {
             loadImages(); initMoments(); loadMessages(); updateMoodBar(getStore('lishen_last_mood') || '平静');
+            
             var last = getStore('last_chat_time');
-            if (!last || (Date.now() - parseInt(last) > 10 * 60 * 1000)) addMessage('你来了。我一直在等你。', 'bot', true);
+            // 判断是否超过 10 分钟没见，或者第一次打开
+            if (!last || (Date.now() - parseInt(last) > 10 * 60 * 1000)) {
+                triggerLoginGreeting();
+            }
 
             var layer = document.getElementById('snowLayer');
             if (layer) {
