@@ -28,10 +28,11 @@
             transition: background 0.5s ease; margin: 0; position: relative; overflow: hidden;
         }
 
+        /* 全局通知 Toast */
         .toast-box {
             position: fixed; top: -60px; left: 50%; transform: translateX(-50%);
-            background: var(--primary); color: #fff; padding: 10px 24px; border-radius: 20px;
-            font-size: 14px; z-index: 999999; box-shadow: 0 4px 15px rgba(74,144,226,0.4);
+            background: #333; color: #fff; padding: 10px 24px; border-radius: 20px;
+            font-size: 14px; z-index: 999999; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); display: flex; align-items: center; gap: 8px;
         }
         .toast-box.show { top: 20px; }
@@ -57,8 +58,12 @@
         .nav-status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex-shrink: 0; transition: background 0.4s; }
         
         .nav-btn-group { display: flex; gap: 6px; align-items: center; }
-        .nav-icon-btn { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8); color: var(--text-main); font-size: 16px; cursor: pointer; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .nav-icon-btn { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.8); color: var(--text-main); font-size: 16px; cursor: pointer; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; position: relative; }
         .nav-icon-btn:hover { background: #fff; }
+
+        /* 朋友圈红点提醒 */
+        .unread-badge { position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; border: 1px solid #fff; display: none; }
+        .unread-badge.show { display: block; }
 
         .chat-messages { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
         .chat-messages::-webkit-scrollbar { width: 4px; }
@@ -111,7 +116,8 @@
         .progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); cursor: pointer; }
         .time-display { font-size: 11px; color: var(--text-main); opacity: 0.7; margin-top: 4px; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); z-index: 10000; display: none; align-items: center; justify-content: center; }
+        /* ===== 弹窗：修复了 z-index 导致被朋友圈盖住的问题 ===== */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); z-index: 100005; display: none; align-items: center; justify-content: center; }
         .modal-overlay.show { display: flex; }
         .modal-box { background: #fff; border-radius: 20px; padding: 24px; width: 300px; max-width: 90vw; text-align: center; }
         .modal-title { font-size: 17px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; }
@@ -180,7 +186,6 @@
         .wx-comment-item { padding: 4px 0; line-height: 1.4; word-wrap: break-word; cursor: pointer; border-radius: 4px; transition: background 0.2s; }
         .wx-comment-item:hover { background: #ebebeb; }
         .wx-comment-user { color: var(--wx-name); font-weight: 600; }
-        .wx-comment-typing { color: #999; font-style: italic; cursor: default; }
         
         .wx-input-bar { display: none; background: #f7f7f7; padding: 8px; border-radius: 4px; margin-top: 6px; gap: 8px; }
         .wx-input-bar.show { display: flex; }
@@ -236,7 +241,11 @@
                 </div>
             </div>
             <div class="nav-btn-group">
-                <button class="nav-icon-btn" onclick="openMoments('discover')" title="朋友圈"><i class="fas fa-compass"></i></button>
+                <!-- 加上未读红点 -->
+                <button class="nav-icon-btn" onclick="openMoments('discover')" title="朋友圈">
+                    <i class="fas fa-compass"></i>
+                    <span class="unread-badge" id="unreadBadge"></span>
+                </button>
                 <button class="nav-icon-btn" id="menuBtn">☰</button>
             </div>
         </div>
@@ -346,6 +355,7 @@
         var userInput = document.getElementById('userInput');
         var messageIdCounter = 0;
         var lastDate = '';
+        var hasUnreadMoments = false; // 朋友圈未读红点状态
 
         var MOOD_MAP = {
             '平静': { color: '#4a90e2' }, '愉悦': { color: '#f5a623' }, '担忧': { color: '#9b59b6' },
@@ -363,6 +373,14 @@
             toast.classList.add('show');
             clearTimeout(toastTimeout);
             toastTimeout = setTimeout(function() { toast.classList.remove('show'); }, 3000);
+        }
+
+        // --- 未读红点控制 ---
+        function setUnreadBadge(state) {
+            hasUnreadMoments = state;
+            var badge = document.getElementById('unreadBadge');
+            if (state) badge.classList.add('show');
+            else badge.classList.remove('show');
         }
 
         function openCustomPanel() { document.getElementById('customPanel').classList.add('show'); dropdown.classList.remove('show'); }
@@ -575,7 +593,7 @@
             } catch(e) {}
         }
 
-        // ================= 聊天发送与详细报错解析 =================
+        // ================= 聊天发送 =================
         function sendMessage() {
             var msg = userInput.value.trim(); if (!msg) return;
             addMessage(msg, 'user', false); userInput.value = ''; setStore('last_chat_time', Date.now().toString());
@@ -633,6 +651,7 @@
                     moments = JSON.parse(saved);
                     moments.forEach(function(m) {
                         if (!m.likes) m.likes = [];
+                        // 初始化时自动清理历史遗留的 isTyping
                         m.comments = m.comments.filter(function(c) { return !c.isTyping; });
                     });
                     saveMomentsData();
@@ -652,6 +671,7 @@
         function openMoments(view) {
             currentView = view;
             document.getElementById('momentsOverlay').classList.add('show');
+            setUnreadBadge(false); // 进入朋友圈清除红点
             updateMomentsUI();
             renderMoments();
         }
@@ -738,15 +758,12 @@
                 
                 var commentsHtml = '';
                 m.comments.forEach(function(c) {
-                    if (c.isTyping) {
-                        commentsHtml += '<div class="wx-comment-item wx-comment-typing">' + getNPCName(c.user) + '正在输入...</div>';
-                    } else {
-                        var displayName = getNPCName(c.user);
-                        if (c.replyTo) displayName += ' 回复 ' + getNPCName(c.replyTo);
-                        var onclickAction = c.user !== 'user' ? 'onclick="event.stopPropagation(); triggerReply(\'' + m.id + '\', \'' + c.user + '\')"' : '';
-                        
-                        commentsHtml += '<div class="wx-comment-item" ' + onclickAction + '><span class="wx-comment-user">' + displayName + '</span>：' + c.text + '</div>';
-                    }
+                    // 已经没有 isTyping 占位了
+                    var displayName = getNPCName(c.user);
+                    if (c.replyTo) displayName += ' 回复 ' + getNPCName(c.replyTo);
+                    var onclickAction = c.user !== 'user' ? 'onclick="event.stopPropagation(); triggerReply(\'' + m.id + '\', \'' + c.user + '\')"' : '';
+                    
+                    commentsHtml += '<div class="wx-comment-item" ' + onclickAction + '><span class="wx-comment-user">' + displayName + '</span>：' + c.text + '</div>';
                 });
 
                 var likesHtml = '';
@@ -802,7 +819,6 @@
             });
         }
 
-        // 指定回复对象
         function triggerReply(momentId, targetUser) {
             var bar = document.getElementById('input-bar-' + momentId);
             bar.classList.add('show');
@@ -854,11 +870,7 @@
             input.value = '';
             input.dataset.replyTo = "";
             
-            if (moment.author === 'lishen' || replyTo === 'lishen') {
-                moment.comments.push({ user: 'lishen', text: '', isTyping: true });
-            } else if (replyTo && replyTo !== 'user') {
-                moment.comments.push({ user: replyTo, text: '', isTyping: true });
-            }
+            // 取消“正在输入”占位逻辑，直接静默发请求
             
             saveMomentsData();
             renderMoments();
@@ -969,23 +981,26 @@
                 if (!reply || reply === 'null' || reply === 'undefined') reply = '...';
                 reply = reply.trim().replace(/\[mood.*?\]/g, '').replace(/^["']|["']$/g, '');
                 
-                moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
-                
                 if (reply && reply !== '...') {
                     moment.comments.push({ user: role, text: reply });
                 }
                 
                 saveMomentsData();
-                if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                
+                // 如果当前不在朋友圈页面，弹出微信消息提醒并亮起红点
+                if (document.getElementById('momentsOverlay').classList.contains('show')) {
+                    renderMoments();
+                } else {
+                    setUnreadBadge(true);
+                    showToast(getNPCName(role) + ' 评论了朋友圈');
+                }
+                
             }).catch(function(e) {
-                moment.comments = moment.comments.filter(function(c){ return !c.isTyping; });
-                saveMomentsData();
-                if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
-                showToast('网络不佳，暂时无法回复');
+                showToast('网络不佳，互动失败');
             });
         }
 
-        // 陆续点赞与评论逻辑（每个动作间隔3-5秒，不再瞬间全赞）
+        // 陆续点赞与评论逻辑（带消息提醒）
         function triggerNPInteractions(momentId) {
             var moment = moments.find(function(m){ return m.id === momentId; });
             if (!moment) return;
@@ -993,23 +1008,35 @@
 
             // 关轩
             setTimeout(function() {
-                if (moment.likes.indexOf('guanxuan') === -1) moment.likes.push('guanxuan');
-                saveMomentsData(); if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                if (moment.likes.indexOf('guanxuan') === -1) {
+                    moment.likes.push('guanxuan');
+                    saveMomentsData();
+                    if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                    else { setUnreadBadge(true); showToast('关轩 赞了你'); }
+                }
             }, 3000 + Math.random()*2000); 
             setTimeout(function() { fetchAIComment(moment, 'guanxuan', null, 'comment'); }, 5000 + Math.random()*2000);
             
             // 小袁
             setTimeout(function() {
-                if (moment.likes.indexOf('xiaoyuan') === -1) moment.likes.push('xiaoyuan');
-                saveMomentsData(); if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                if (moment.likes.indexOf('xiaoyuan') === -1) {
+                    moment.likes.push('xiaoyuan');
+                    saveMomentsData();
+                    if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                    else { setUnreadBadge(true); showToast('小袁 赞了你'); }
+                }
             }, 7000 + Math.random()*3000);
             setTimeout(function() { fetchAIComment(moment, 'xiaoyuan', null, 'comment'); }, 9000 + Math.random()*3000);
             
             // 方院长（50%概率点赞与评论）
             if (Math.random() < 0.5) {
                 setTimeout(function() {
-                    if (moment.likes.indexOf('fang') === -1) moment.likes.push('fang');
-                    saveMomentsData(); if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                    if (moment.likes.indexOf('fang') === -1) {
+                        moment.likes.push('fang');
+                        saveMomentsData();
+                        if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                        else { setUnreadBadge(true); showToast('方院长 赞了你'); }
+                    }
                 }, 11000 + Math.random()*3000);
                 setTimeout(function() { fetchAIComment(moment, 'fang', null, 'comment'); }, 13000 + Math.random()*3000);
             }
@@ -1017,13 +1044,16 @@
             // 疏白（50%概率点赞与评论）
             if (Math.random() < 0.5) {
                 setTimeout(function() {
-                    if (moment.likes.indexOf('shubai') === -1) moment.likes.push('shubai');
-                    saveMomentsData(); if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                    if (moment.likes.indexOf('shubai') === -1) {
+                        moment.likes.push('shubai');
+                        saveMomentsData();
+                        if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
+                        else { setUnreadBadge(true); showToast('疏白 赞了你'); }
+                    }
                 }, 15000 + Math.random()*4000);
                 setTimeout(function() { fetchAIComment(moment, 'shubai', null, 'comment'); }, 17000 + Math.random()*4000);
             }
 
-            // 初始保存一次，确保队列建立
             saveMomentsData();
             if (document.getElementById('momentsOverlay').classList.contains('show')) renderMoments();
         }
